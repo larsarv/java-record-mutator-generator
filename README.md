@@ -1,0 +1,1 @@
+A java annotation processor that generates builders and mutators for records.

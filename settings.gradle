@@ -1,0 +1,5 @@
+rootProject.name = 'java-record-mutator-generator'
+include 'api'
+include 'runtime'
+include 'annotation-processor'
+include 'test-project'

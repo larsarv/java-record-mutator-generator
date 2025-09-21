@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.github.larsarv.jrmg'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(":api")
+    implementation project(":runtime")
+
+    annotationProcessor project(":annotation-processor")
+
+    testImplementation(platform("org.junit:junit-bom:6.0.1"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava {
+/*
+    options.fork = true
+    options.forkOptions.jvmArgs << "-Xdebug"
+    options.forkOptions.jvmArgs << "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+ */
+}
