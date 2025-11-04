@@ -2,10 +2,7 @@ package io.github.larsarv.jrmg.annotation.processor;
 
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.*;
-import io.github.larsarv.jrmg.api.GenerateMutator;
-import io.github.larsarv.jrmg.api.MutableRecordListMutateFunction;
-import io.github.larsarv.jrmg.api.RecordMutator;
-import io.github.larsarv.jrmg.api.SimpleListMutateFunction;
+import io.github.larsarv.jrmg.api.*;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -26,8 +23,8 @@ import java.util.function.Function;
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
     private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
-    private static final ClassName MUTABLERECORDLISTMUTATORIMPL_CLASSNAME = ClassName.get("io.github.larsarv.jrmg.runtime", "MutableRecordListMutatorImpl");
-    private static final ClassName SIMPLELISTMUTATORIMPL_CLASSNAME = ClassName.get("io.github.larsarv.jrmg.runtime", "SimpleListMutatorImpl");
+    private static final ClassName MUTABLERECORDLISTMUTATORIMPL_CLASSNAME = ClassName.get(MutableRecordListMutatorImpl.class);
+    private static final ClassName SIMPLELISTMUTATORIMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
     private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
 
     @Override

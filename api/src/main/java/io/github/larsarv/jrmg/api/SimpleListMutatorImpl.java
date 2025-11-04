@@ -1,7 +1,4 @@
-package io.github.larsarv.jrmg.runtime;
-
-import io.github.larsarv.jrmg.api.SimpleListMutator;
-import io.github.larsarv.jrmg.api.IndexedFunction;
+package io.github.larsarv.jrmg.api;
 
 import java.util.ArrayList;
 import java.util.Collections;

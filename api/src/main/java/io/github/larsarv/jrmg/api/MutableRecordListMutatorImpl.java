@@ -1,6 +1,4 @@
-package io.github.larsarv.jrmg.runtime;
-
-import io.github.larsarv.jrmg.api.*;
+package io.github.larsarv.jrmg.api;
 
 import java.util.ArrayList;
 import java.util.Collections;

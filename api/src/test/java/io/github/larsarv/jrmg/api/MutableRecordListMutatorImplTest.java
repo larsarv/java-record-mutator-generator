@@ -1,10 +1,9 @@
-package io.github.larsarv.jrmg.runtime;
+package io.github.larsarv.jrmg.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import io.github.larsarv.jrmg.api.RecordMutator;
 import org.junit.jupiter.api.Test;
 
 class MutableRecordListMutatorImplTest {
