@@ -1,10 +1,12 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
+    id 'org.jreleaser' version '1.17.0'
 }
 
 group = 'io.github.larsarv.jrmg'
-version = '1.0-SNAPSHOT'
+version = '1.0.0'
 
 repositories {
     mavenCentral()
@@ -13,17 +15,76 @@ repositories {
 publishing {
     repositories {
         maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/larsarv/java-record-mutator-generator")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-            }
+            name = "PreDeploy"
+            url = uri(layout.buildDirectory.dir("pre-deploy"))
         }
     }
     publications {
-        gpr(MavenPublication) {
+        myPub(MavenPublication) {
             from components.java
+            pom {
+                name = 'Java Record Mutator Generator: Annotation Processor'
+                description = 'Annotation processor package for the Java Record Mutator Generator'
+                url = 'https://github.com/lararv/java-record-mutator-generator'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'larsarv'
+                        name = 'Lars Arvidson'
+                        email = 'lars.arvidson@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/lararv/java-record-mutator-generator.git'
+                    developerConnection = 'scm:git:ssh://github.com:larsarv/java-record-mutator-generator.git'
+                    url = 'https://github.com/larsarv/java-record-mutator-generator'
+                }
+            }
+        }
+    }
+}
+/*
+signing {
+    sign publishing.publications.myPub
+}
+*/
+jreleaser {
+    project {
+        copyright = '2025 Lars Arvidson'
+        description = 'Annotation processor package for the Java Record Mutator Generator'
+    }
+    signing {
+        active = 'ALWAYS'
+        armored = true
+        mode = 'FILE'
+        publicKey = '../public.key'
+        secretKey = '../private.key'
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+                    password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+                    stagingRepository('build/pre-deploy')
+                }
+                app {
+                    retryDelay = 20
+                    maxRetries = 100
+                }
+            }
+        }
+    }
+    release {
+        github {
+            enabled = false
         }
     }
 }
@@ -39,6 +100,11 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:6.0.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 test {
