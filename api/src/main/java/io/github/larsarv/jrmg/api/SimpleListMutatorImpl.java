@@ -5,9 +5,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+/**
+ * An implementation of {@link SimpleListMutator} that provides a fluent API for mutating a list.
+ * <p>
+ * This implementation maintains a mutable list internally and provides methods to
+ * modify its contents. It allows for adding, removing, filtering, and updating elements of the list.
+ * <p>
+ * This implementation maintains a mutable list internally and provides methods to
+ * modify its contents.
+ * <p>
+ * The constructor accepts a list, which is copied to the internal list. If the provided list is null,
+ * an empty list is created.
+ * <p>
+ * This class is designed for use in fluent APIs where operations are chained together before finalizing
+ * the result with {@link #build()}.
+ *
+ * @param <T> the type of elements in the list
+ */
 public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
     private final List<T> list;
 
+    /**
+     * Constructs a new instance of SimpleListMutatorImpl for the specified list and element mutator factory.
+     *
+     * @param list the list to be copied into the internal mutable list; may be {@code null}
+     */
     public SimpleListMutatorImpl(List<T> list) {
         this.list = list == null ? new ArrayList<>(): new ArrayList<>(list);
     }

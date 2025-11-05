@@ -18,6 +18,23 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * AnnotationProcessor is a custom annotation processor designed to generate mutator classes for records annotated with
+ * {@link io.github.larsarv.jrmg.api.GenerateMutator}. It processes annotations at compile time and generates appropriate
+ * mutator implementations based on the annotated record type.
+ * <p>
+ * The generated mutator has setters and getters for the record's component and supports mutation for three types of
+ * record components:
+ * <ul>
+ * <li>Components that are records annotated with {@link io.github.larsarv.jrmg.api.GenerateMutator}</li>
+ * <li>Components that are of type {@code java.util.List} with elements that are records annotated with
+ * {@link io.github.larsarv.jrmg.api.GenerateMutator} through a {@code MutableRecordListMutator}</li>
+ * <li>Components that are of type {@code java.util.List} with elements that are of other types through a
+ * {@code SimpleListMutator}</li>
+ * </ul>
+ *
+ * The processor inspects annotated elements, validates that they are records, and generates corresponding mutator classes.
+ */
 @SupportedAnnotationTypes("io.github.larsarv.jrmg.api.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 @AutoService(Processor.class)
@@ -26,6 +43,12 @@ public class AnnotationProcessor extends AbstractProcessor {
     private static final ClassName MUTABLERECORDLISTMUTATORIMPL_CLASSNAME = ClassName.get(MutableRecordListMutatorImpl.class);
     private static final ClassName SIMPLELISTMUTATORIMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
     private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
+
+    /**
+     * Constructor for the AnnotationProcessor.
+     */
+    public AnnotationProcessor() {
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
