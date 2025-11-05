@@ -1,4 +1,4 @@
-package io.github.larsarv.jrmg.test.project;
+package io.github.larsarv.jrmg.test.project.example.domain;
 
 import io.github.larsarv.jrmg.api.GenerateMutator;
 
@@ -20,7 +20,6 @@ public record Invoice(
         String currency,
         InvoiceStatus invoiceStatus,
         Address billingAddress,
-        List<InvoiceLineItem> items,
-        List<Integer> test1
+        List<InvoiceLineItem> items
 ) {
 }

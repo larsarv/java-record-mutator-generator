@@ -1,4 +1,4 @@
-package io.github.larsarv.jrmg.test.project;
+package io.github.larsarv.jrmg.test.project.example.domain;
 
 public enum InvoiceStatus {
     PAID,
