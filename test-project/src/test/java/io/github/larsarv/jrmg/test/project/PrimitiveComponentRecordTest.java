@@ -18,7 +18,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void booleanComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -28,7 +28,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void booleanComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.booleanComponent(), mutator.getBooleanComponent());
     }
@@ -36,7 +36,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void booleanComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setBooleanComponent(true)
@@ -48,7 +48,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void byteComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -58,7 +58,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void byteComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.byteComponent(), mutator.getByteComponent());
     }
@@ -66,7 +66,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void byteComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setByteComponent((byte) 10)
@@ -78,7 +78,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void charComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -88,7 +88,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void charComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.charComponent(), mutator.getCharComponent());
     }
@@ -96,7 +96,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void charComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setCharComponent('x')
@@ -108,7 +108,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void shortComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -118,7 +118,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void shortComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.shortComponent(), mutator.getShortComponent());
     }
@@ -126,7 +126,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void shortComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setShortComponent((short) 100)
@@ -138,7 +138,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void intComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -148,7 +148,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void intComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.intComponent(), mutator.getIntComponent());
     }
@@ -156,7 +156,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void intComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setIntComponent(100)
@@ -168,7 +168,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void longComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -178,7 +178,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void longComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.longComponent(), mutator.getLongComponent());
     }
@@ -186,7 +186,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void longComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setLongComponent(100L)
@@ -198,7 +198,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void floatComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -208,7 +208,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void floatComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.floatComponent(), mutator.getFloatComponent(), 0.0001);
     }
@@ -216,7 +216,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void floatComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setFloatComponent(10.5f)
@@ -228,7 +228,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void doubleComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         PrimitiveComponentRecord builtRecord = mutator.build();
         // Assert
@@ -238,7 +238,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void doubleComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator(TEST_RECORD);
+        var mutator = PrimitiveComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.doubleComponent(), mutator.getDoubleComponent(), 0.0001);
     }
@@ -246,7 +246,7 @@ class PrimitiveComponentRecordTest {
     @Test
     void doubleComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new PrimitiveComponentRecordMutator();
+        var mutator = PrimitiveComponentRecordMutator.mutator();
         // Act
         PrimitiveComponentRecord builtRecord = mutator
                 .setDoubleComponent(10.5)

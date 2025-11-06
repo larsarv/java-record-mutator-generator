@@ -16,7 +16,7 @@ class ListComponentRecordTest {
     @Test
     void listComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new ListComponentRecordMutator(TEST_RECORD);
+        var mutator = ListComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         ListComponentRecord builtRecord = mutator.build();
         // Assert
@@ -26,7 +26,7 @@ class ListComponentRecordTest {
     @Test
     void listComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new ListComponentRecordMutator(TEST_RECORD);
+        var mutator = ListComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertSame(TEST_RECORD.listComponent(), mutator.getListComponent());
     }
@@ -34,7 +34,7 @@ class ListComponentRecordTest {
     @Test
     void listComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new ListComponentRecordMutator();
+        var mutator = ListComponentRecordMutator.mutator();
         List<Object> value = new ArrayList<>();
         // Act
         ListComponentRecord builtRecord = mutator
@@ -47,7 +47,7 @@ class ListComponentRecordTest {
     @Test
     void listComponentShouldSetSecondElement() {
         // Arrange
-        var mutator = new ListComponentRecordMutator(TEST_RECORD);
+        var mutator = ListComponentRecordMutator.mutator(TEST_RECORD);
         Object value = new Object();
         // Act
         ListComponentRecord builtRecord = mutator

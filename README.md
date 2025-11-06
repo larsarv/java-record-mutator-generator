@@ -56,7 +56,7 @@ public record InvoiceLineItem(
 This generates `InvoiceMutator`, `Address` and `InvoiceLineItem`, which you can use like:
 ```
 public static Invoice mutate(Invoice invoice) {
-    return new InvoiceMutator(invoice)
+    return InvoiceMutator.mutator(invoice)
             .setCurrency("SEK")
             .mutateBillingAddress(a -> a
                     .setAddressLine1("address 1")

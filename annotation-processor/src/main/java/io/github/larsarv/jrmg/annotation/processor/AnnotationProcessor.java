@@ -148,14 +148,14 @@ public class AnnotationProcessor extends AbstractProcessor {
                 if (typeElement.getAnnotation(GenerateMutator.class) != null) {
                     // Component is a record annotated with GenerateMutator, add mutate function
                     String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
-                    ClassName recordComponentClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
+                    ClassName recordComponentMutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
 
-                    ParameterizedTypeName parameterType = ParameterizedTypeName.get(ClassName.get(Function.class), recordComponentClassName, recordComponentClassName);
+                    ParameterizedTypeName parameterType = ParameterizedTypeName.get(ClassName.get(Function.class), recordComponentMutatorClassName, recordComponentMutatorClassName);
                     MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
                             .addModifiers(Modifier.PUBLIC)
                             .returns(mutatorClassName)
                             .addParameter(parameterType, "mutateFunction")
-                            .addStatement("this.$N = mutateFunction.apply(new $T(this.$N)).build()", fieldName, recordComponentClassName, fieldName)
+                            .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()", fieldName, recordComponentMutatorClassName, fieldName)
                             .addStatement("return this")
                             .build();
 
@@ -182,7 +182,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                                                     typeName, listElementMutatorClassName),
                                             "mutateFunction")
                                     // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                                    .addStatement("$T<$T,$T> constructor = $T::new", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
+                                    .addStatement("$T<$T,$T> constructor = $T::mutator", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
                                     .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, MUTABLERECORDLISTMUTATORIMPL_CLASSNAME, fieldName)
                                     .addStatement("return this")
                                     .build();
@@ -218,15 +218,26 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
         constructorCodeBuilder.endControlFlow();
 
-        // Simple no args constructor
-        mutatorClassBuilder.addMethod(MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PUBLIC)
-                .build());
         // Constructor taking value
         mutatorClassBuilder.addMethod(MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PUBLIC)
+                .addModifiers(Modifier.PRIVATE)
                 .addParameter(recordClassName, "value")
                 .addCode(constructorCodeBuilder.build())
+                .build());
+
+        // No argument factory method
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(mutatorClassName)
+                .addStatement("return new $T(null)", mutatorClassName)
+                .build());
+
+        // Factory method
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(recordClassName, "value")
+                .returns(mutatorClassName)
+                .addStatement("return new $T(value)", mutatorClassName)
                 .build());
 
         mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("build")

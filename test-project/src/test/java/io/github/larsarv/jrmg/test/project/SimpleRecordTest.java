@@ -13,7 +13,7 @@ class SimpleRecordTest {
     @Test
     void stringComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator(TEST_RECORD);
+        var mutator = SimpleRecordMutator.mutator(TEST_RECORD);
         // Act
         SimpleRecord builtRecord = mutator.build();
         // Assert
@@ -23,7 +23,7 @@ class SimpleRecordTest {
     @Test
     void stringComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator(TEST_RECORD);
+        var mutator = SimpleRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertSame(TEST_RECORD.stringComponent(), mutator.getStringComponent());
     }
@@ -31,7 +31,7 @@ class SimpleRecordTest {
     @Test
     void stringComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator();
+        var mutator = SimpleRecordMutator.mutator();
         String value = "string";
         // Act
         SimpleRecord builtRecord = mutator
@@ -44,7 +44,7 @@ class SimpleRecordTest {
     @Test
     void objectComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator(TEST_RECORD);
+        var mutator = SimpleRecordMutator.mutator(TEST_RECORD);
         // Act
         SimpleRecord builtRecord = mutator.build();
         // Assert
@@ -54,7 +54,7 @@ class SimpleRecordTest {
     @Test
     void objectComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator(TEST_RECORD);
+        var mutator = SimpleRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertSame(TEST_RECORD.objectComponent(), mutator.getObjectComponent());
     }
@@ -62,7 +62,7 @@ class SimpleRecordTest {
     @Test
     void objectComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new SimpleRecordMutator();
+        var mutator = SimpleRecordMutator.mutator();
         Object value = new Object();
         // Act
         SimpleRecord builtRecord = mutator

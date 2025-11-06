@@ -21,7 +21,7 @@ class AnnotatedRecordComponentRecordTest {
     @Test
     void componentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new AnnotatedRecordComponentRecordMutator(TEST_RECORD);
+        var mutator = AnnotatedRecordComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertEquals(TEST_RECORD.component(), mutator.getComponent());
     }
@@ -29,7 +29,7 @@ class AnnotatedRecordComponentRecordTest {
     @Test
     void componentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new AnnotatedRecordComponentRecordMutator(TEST_RECORD);
+        var mutator = AnnotatedRecordComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         AnnotatedRecordComponentRecord builtRecord = mutator.build();
         // Assert
@@ -39,7 +39,7 @@ class AnnotatedRecordComponentRecordTest {
     @Test
     void componentShouldGetNewValue() {
         // Arrange
-        var mutator = new AnnotatedRecordComponentRecordMutator();
+        var mutator = AnnotatedRecordComponentRecordMutator.mutator();
         // Act
         AnnotatedRecordComponentRecord builtRecord = mutator
                 .setComponent(COMPONENT_RECORD)
@@ -51,7 +51,7 @@ class AnnotatedRecordComponentRecordTest {
     @Test
     void componentMutatorShouldMutateOriginalValue() {
         // Arrange
-        var mutator = new AnnotatedRecordComponentRecordMutator();
+        var mutator = AnnotatedRecordComponentRecordMutator.mutator();
         // Act
         AnnotatedRecordComponentRecord builtRecord = mutator
                 .mutateComponent(component -> component

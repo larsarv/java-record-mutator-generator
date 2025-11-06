@@ -11,13 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AnnotatedRecordListComponentRecordTest {
     private static final AnnotatedRecordListComponentRecord TEST_RECORD = new AnnotatedRecordListComponentRecord(
-            Arrays.asList(new PrimitiveComponentRecordMutator().build(), new PrimitiveComponentRecordMutator().build(), new PrimitiveComponentRecordMutator().build())
+            Arrays.asList(
+                    PrimitiveComponentRecordMutator.mutator().build(),
+                    PrimitiveComponentRecordMutator.mutator().build(),
+                    PrimitiveComponentRecordMutator.mutator().build())
     );
 
     @Test
     void listComponentShouldRetainOriginalValue() {
         // Arrange
-        var mutator = new AnnotatedRecordListComponentRecordMutator(TEST_RECORD);
+        var mutator = AnnotatedRecordListComponentRecordMutator.mutator(TEST_RECORD);
         // Act
         AnnotatedRecordListComponentRecord builtRecord = mutator.build();
         // Assert
@@ -27,7 +30,7 @@ class AnnotatedRecordListComponentRecordTest {
     @Test
     void listComponentGetterShouldReturnOriginalValue() {
         // Arrange
-        var mutator = new AnnotatedRecordListComponentRecordMutator(TEST_RECORD);
+        var mutator = AnnotatedRecordListComponentRecordMutator.mutator(TEST_RECORD);
         // Assert
         assertSame(TEST_RECORD.listComponent(), mutator.getListComponent());
     }
@@ -35,7 +38,7 @@ class AnnotatedRecordListComponentRecordTest {
     @Test
     void listComponentShouldGetNewValue() {
         // Arrange
-        var mutator = new AnnotatedRecordListComponentRecordMutator();
+        var mutator = AnnotatedRecordListComponentRecordMutator.mutator();
         List<PrimitiveComponentRecord> value = new ArrayList<>();
         // Act
         AnnotatedRecordListComponentRecord builtRecord = mutator
@@ -48,8 +51,8 @@ class AnnotatedRecordListComponentRecordTest {
     @Test
     void listComponentShouldSetSecondElement() {
         // Arrange
-        var mutator = new AnnotatedRecordListComponentRecordMutator(TEST_RECORD);
-        PrimitiveComponentRecord value = new PrimitiveComponentRecordMutator().build();
+        var mutator = AnnotatedRecordListComponentRecordMutator.mutator(TEST_RECORD);
+        PrimitiveComponentRecord value = PrimitiveComponentRecordMutator.mutator().build();
         // Act
         AnnotatedRecordListComponentRecord builtRecord = mutator
                 .mutateListComponent(list -> list
@@ -62,8 +65,8 @@ class AnnotatedRecordListComponentRecordTest {
     @Test
     void listComponentShouldMutateSecondElement() {
         // Arrange
-        var mutator = new AnnotatedRecordListComponentRecordMutator(TEST_RECORD);
-        PrimitiveComponentRecord value = new PrimitiveComponentRecordMutator().build();
+        var mutator = AnnotatedRecordListComponentRecordMutator.mutator(TEST_RECORD);
+        PrimitiveComponentRecord value = PrimitiveComponentRecordMutator.mutator().build();
         // Act
         AnnotatedRecordListComponentRecord builtRecord = mutator
                 .mutateListComponent(list -> list
