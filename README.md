@@ -19,7 +19,6 @@ allowing developers to modify nested records in a fluent, builder-like manner.
 
 ## Use Cases
 - Domain Modeling: Modify complex domain records without writing manual builders.
-- API Responses: Mutate response objects before returning them to clients.
 - Testing: Create test data with specific mutations for unit tests.
 - Data Transformation: Apply transformations to nested records or lists of records.
 
