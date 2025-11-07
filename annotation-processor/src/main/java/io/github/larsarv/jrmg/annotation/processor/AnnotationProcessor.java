@@ -32,7 +32,7 @@ import java.util.function.Function;
  * <li>Components that are of type {@code java.util.List} with elements that are of other types through a
  * {@code SimpleListMutator}</li>
  * </ul>
- *
+ * <p>
  * The processor inspects annotated elements, validates that they are records, and generates corresponding mutator classes.
  */
 @SupportedAnnotationTypes("io.github.larsarv.jrmg.api.*")
@@ -43,6 +43,9 @@ public class AnnotationProcessor extends AbstractProcessor {
     private static final ClassName SIMPLELISTMUTATORIMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
     private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
 
+    private TypeElement generateMutatorTypeElement;
+    private TypeElement listTypeElement;
+
     /**
      * Constructor for the AnnotationProcessor.
      */
@@ -52,6 +55,13 @@ public class AnnotationProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latest();
+    }
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        generateMutatorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_MUTATOR_CLASS_NAME);
+        listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
     }
 
     @Override
@@ -76,9 +86,10 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private void processElement(TypeElement annotation, Element element) {
-        String annotationClassName = annotation.getQualifiedName().toString();
-
-        if (GENERATE_MUTATOR_CLASS_NAME.equals(annotationClassName)) {
+        if (processingEnv.getTypeUtils().isSameType(
+                annotation.asType(),
+                generateMutatorTypeElement.asType())
+        ) {
             TypeElement typeElement = (TypeElement) element;
             // Make sure the annotation is on a record
             if (element.getKind() != ElementKind.RECORD) {
@@ -108,22 +119,103 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .addSuperinterface(ParameterizedTypeName.get(ClassName.get(RecordMutator.class), recordClassName))
                 .addModifiers(Modifier.PUBLIC);
 
+
+        addConstructor(mutatorClassBuilder, recordElement, recordClassName);
+        addFieldsGettersAndSetters(mutatorClassBuilder, recordElement, mutatorClassName);
+        addMutateFunction(mutatorClassBuilder, recordElement, mutatorClassName);
+        addFactoryMethods(mutatorClassBuilder, mutatorClassName, recordClassName);
+        addBuildMethod(recordElement, mutatorClassBuilder, recordClassName);
+
+        JavaFile javaFile = JavaFile.builder(recordElementPackageName, mutatorClassBuilder.build())
+                .build();
+
+        try {
+            javaFile.writeTo(processingEnv.getFiler());
+        } catch (IOException e) {
+            printMessage(Diagnostic.Kind.ERROR, e.getMessage(), recordElement);
+        }
+    }
+
+    private static void addBuildMethod(
+            TypeElement recordElement,
+            TypeSpec.Builder mutatorClassBuilder,
+            ClassName recordClassName
+    ) {
+        List<String> fieldNameList = creteFieldNameList(recordElement);
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("build")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(recordClassName)
+                .addStatement("return new $T($L)", recordClassName, String.join(", ", fieldNameList))
+                .build());
+    }
+
+    private static void addFactoryMethods(
+            TypeSpec.Builder mutatorClassBuilder,
+            ClassName mutatorClassName,
+            ClassName recordClassName
+    ) {
+        // No argument factory method
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(mutatorClassName)
+                .addStatement("return new $T(null)", mutatorClassName)
+                .build());
+
+        // Factory method
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(recordClassName, "value")
+                .returns(mutatorClassName)
+                .addStatement("return new $T(value)", mutatorClassName)
+                .build());
+    }
+
+    private static void addConstructor(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeElement recordElement,
+            ClassName recordClassName
+    ) {
         CodeBlock.Builder constructorCodeBuilder = CodeBlock.builder();
         constructorCodeBuilder.beginControlFlow("if (value != null)");
+        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
+            String componentName = recordComponentElement.getSimpleName().toString();
+            String fieldName = toFiledName(componentName);
 
+            constructorCodeBuilder.addStatement("this.$N = value.$N()", fieldName, componentName);
+        }
+        constructorCodeBuilder.endControlFlow();
+
+        mutatorClassBuilder.addMethod(MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PRIVATE)
+                .addParameter(recordClassName, "value")
+                .addCode(constructorCodeBuilder.build())
+                .build());
+    }
+
+    private static List<String> creteFieldNameList(TypeElement recordElement) {
         List<String> fieldList = new ArrayList<>();
+        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
+            String componentName = recordComponentElement.getSimpleName().toString();
+            String fieldName = toFiledName(componentName);
+            fieldList.add("this." + fieldName);
+        }
+        return fieldList;
+    }
+
+    private static void addFieldsGettersAndSetters(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeElement recordElement,
+            ClassName mutatorClassName
+    ) {
         for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
             TypeName componentType = TypeName.get(recordComponentElement.asType());
             String componentName = recordComponentElement.getSimpleName().toString();
             String fieldName = toFiledName(componentName);
-
-            fieldList.add("this." + fieldName);
             FieldSpec field = FieldSpec.builder(
                     componentType,
                     fieldName,
                     Modifier.PRIVATE).build();
-
-            constructorCodeBuilder.addStatement("this.$N = value.$N()", fieldName, componentName);
 
             MethodSpec setterMethod = MethodSpec.methodBuilder(toMethodName("set", componentName))
                     .addModifiers(Modifier.PUBLIC)
@@ -144,123 +236,155 @@ public class AnnotationProcessor extends AbstractProcessor {
                     .addMethod(setterMethod)
                     .addMethod(getterMethod);
 
+        }
+    }
+
+    private void addMutateFunction(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeElement recordElement,
+            ClassName mutatorClassName
+    ) {
+        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
+            String componentName = recordComponentElement.getSimpleName().toString();
+            String fieldName = toFiledName(componentName);
 
             TypeMirror recordComponentType = recordComponentElement.asType();
             if (recordComponentType.getKind() == TypeKind.DECLARED) {
                 DeclaredType declaredType = (DeclaredType) recordComponentType;
                 Element typeElement = processingEnv.getTypeUtils().asElement(declaredType);
-                if (typeElement.getAnnotation(GenerateMutator.class) != null) {
+                if (isRecordAnnotatedWithGenerateMutator(typeElement)) {
                     // Component is a record annotated with GenerateMutator, add mutate function
-                    String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
-                    ClassName recordComponentMutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
-
-                    ParameterizedTypeName parameterType = ParameterizedTypeName.get(ClassName.get(Function.class), recordComponentMutatorClassName, recordComponentMutatorClassName);
-                    MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                            .addModifiers(Modifier.PUBLIC)
-                            .returns(mutatorClassName)
-                            .addParameter(parameterType, "mutateFunction")
-                            .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()", fieldName, recordComponentMutatorClassName, fieldName)
-                            .addStatement("return this")
-                            .build();
-
-                    mutatorClassBuilder.addMethod(mutateMethod);
+                    addMutateFunctionForRecordAnnotatedWithGenerateMutator(
+                            mutatorClassName,
+                            mutatorClassBuilder,
+                            typeElement,
+                            componentName,
+                            fieldName);
                 } else {
-                    TypeElement listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
-                    if (processingEnv.getTypeUtils().isSameType(listTypeElement.asType(), declaredType.asElement().asType())) {
-                        if (declaredType.getTypeArguments().size() == 1
-                                && declaredType.getTypeArguments().get(0).getKind() == TypeKind.DECLARED
-                                && processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0)).getAnnotation(GenerateMutator.class) != null) {
+                    if (isList(declaredType)) {
+                        if (hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(declaredType)) {
                             // Component is a list of elements annotated with GenerateMutator, add modifier function
-                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
-                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
-                            String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
-                            ClassName listElementMutatorClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName() + "Mutator");
-                            ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
-
-                            MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                                    .addModifiers(Modifier.PUBLIC)
-                                    .returns(mutatorClassName)
-                                    .addParameter(
-                                            ParameterizedTypeName.get(
-                                                    ClassName.get(MutableRecordListMutateFunction.class),
-                                                    typeName, listElementMutatorClassName),
-                                            "mutateFunction")
-                                    // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                                    .addStatement("$T<$T,$T> constructor = $T::mutator", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
-                                    .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, MUTABLERECORDLISTMUTATORIMPL_CLASSNAME, fieldName)
-                                    .addStatement("return this")
-                                    .build();
-
-                            mutatorClassBuilder.addMethod(mutateMethod);
+                            addMutateFunctionForListOfRecordAnnotatedWithGenerateMutator(
+                                    mutatorClassName,
+                                    mutatorClassBuilder,
+                                    declaredType,
+                                    componentName,
+                                    fieldName);
 
                         } else {
                             // Simple list
-                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
-                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
-                            String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
-                            ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
-
-                            MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                                    .addModifiers(Modifier.PUBLIC)
-                                    .returns(mutatorClassName)
-                                    .addParameter(
-                                            ParameterizedTypeName.get(
-                                                    ClassName.get(SimpleListMutateFunction.class),
-                                                    typeName),
-                                            "mutateFunction")
-                                    // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                                    .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N)).build()", fieldName, SIMPLELISTMUTATORIMPL_CLASSNAME, fieldName)
-                                    .addStatement("return this")
-                                    .build();
-
-                            mutatorClassBuilder.addMethod(mutateMethod);
+                            addMutatorForSimpleList(
+                                    mutatorClassName,
+                                    mutatorClassBuilder,
+                                    declaredType,
+                                    componentName,
+                                    fieldName);
 
                         }
                     }
                 }
             }
         }
-        constructorCodeBuilder.endControlFlow();
-
-        // Constructor taking value
-        mutatorClassBuilder.addMethod(MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PRIVATE)
-                .addParameter(recordClassName, "value")
-                .addCode(constructorCodeBuilder.build())
-                .build());
-
-        // No argument factory method
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(mutatorClassName)
-                .addStatement("return new $T(null)", mutatorClassName)
-                .build());
-
-        // Factory method
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(recordClassName, "value")
-                .returns(mutatorClassName)
-                .addStatement("return new $T(value)", mutatorClassName)
-                .build());
-
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("build")
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordClassName)
-                .addStatement("return new $T($L)", recordClassName, String.join(", ", fieldList))
-                .build());
-
-        JavaFile javaFile = JavaFile.builder(recordElementPackageName, mutatorClassBuilder.build())
-                .build();
-
-        try {
-            javaFile.writeTo(processingEnv.getFiler());
-        } catch (IOException e) {
-            printMessage(Diagnostic.Kind.ERROR, e.getMessage(), recordElement);
-        }
     }
 
+    private boolean hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(DeclaredType declaredType) {
+        List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+        if (typeArguments.size() != 1) {
+            return false;
+        }
+        TypeMirror elementType = typeArguments.get(0);
+        Element element = processingEnv.getTypeUtils().asElement(elementType);
+        return isRecordAnnotatedWithGenerateMutator(element);
+    }
+
+    private boolean isList(DeclaredType declaredType) {
+        return processingEnv.getTypeUtils().isSameType(listTypeElement.asType(), declaredType.asElement().asType());
+    }
+
+    private static boolean isRecordAnnotatedWithGenerateMutator(Element typeElement) {
+        return typeElement.getAnnotation(GenerateMutator.class) != null &&
+                typeElement.getKind() == ElementKind.RECORD;
+    }
+
+    private void addMutatorForSimpleList(
+            ClassName mutatorClassName,
+            TypeSpec.Builder mutatorClassBuilder,
+            DeclaredType declaredType,
+            String componentName,
+            String fieldName
+    ) {
+        TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
+        Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
+        String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
+        ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
+
+        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(mutatorClassName)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(SimpleListMutateFunction.class),
+                                typeName),
+                        "mutateFunction")
+                // Function<InvoiceLineItem,InvoiceLineItemMutator>
+                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N)).build()", fieldName, SIMPLELISTMUTATORIMPL_CLASSNAME, fieldName)
+                .addStatement("return this")
+                .build();
+
+        mutatorClassBuilder.addMethod(mutateMethod);
+    }
+
+    private void addMutateFunctionForListOfRecordAnnotatedWithGenerateMutator(
+            ClassName mutatorClassName,
+            TypeSpec.Builder mutatorClassBuilder,
+            DeclaredType declaredType,
+            String componentName,
+            String fieldName
+    ) {
+        TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
+        Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
+        String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
+        ClassName listElementMutatorClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName() + "Mutator");
+        ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
+
+        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(mutatorClassName)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(MutableRecordListMutateFunction.class),
+                                typeName, listElementMutatorClassName),
+                        "mutateFunction")
+                // Function<InvoiceLineItem,InvoiceLineItemMutator>
+                .addStatement("$T<$T,$T> constructor = $T::mutator", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
+                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, MUTABLERECORDLISTMUTATORIMPL_CLASSNAME, fieldName)
+                .addStatement("return this")
+                .build();
+
+        mutatorClassBuilder.addMethod(mutateMethod);
+    }
+
+    private void addMutateFunctionForRecordAnnotatedWithGenerateMutator(
+            ClassName mutatorClassName,
+            TypeSpec.Builder mutatorClassBuilder,
+            Element typeElement,
+            String componentName,
+            String fieldName
+    ) {
+        String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
+        ClassName recordComponentMutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
+
+        ParameterizedTypeName parameterType = ParameterizedTypeName.get(ClassName.get(Function.class), recordComponentMutatorClassName, recordComponentMutatorClassName);
+        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(mutatorClassName)
+                .addParameter(parameterType, "mutateFunction")
+                .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()", fieldName, recordComponentMutatorClassName, fieldName)
+                .addStatement("return this")
+                .build();
+
+        mutatorClassBuilder.addMethod(mutateMethod);
+    }
 
     void printMessage(Diagnostic.Kind kind, String message) {
         processingEnv.getMessager().printMessage(kind, message);
