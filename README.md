@@ -16,6 +16,7 @@ allowing developers to modify nested records in a fluent, builder-like manner.
   MutableRecordListMutator), allowing you to mutate individual records or apply transformations to all items.
 - Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
 - Type Safety: Fully type-safe — all generated methods are strongly typed and checked at compile time.
+- Supports Java 17+
 
 ## Use Cases
 - Domain Modeling: Modify complex domain records without writing manual builders.

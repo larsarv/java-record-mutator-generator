@@ -36,7 +36,6 @@ import java.util.function.Function;
  * The processor inspects annotated elements, validates that they are records, and generates corresponding mutator classes.
  */
 @SupportedAnnotationTypes("io.github.larsarv.jrmg.api.*")
-@SupportedSourceVersion(SourceVersion.RELEASE_21)
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
     private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
@@ -48,6 +47,11 @@ public class AnnotationProcessor extends AbstractProcessor {
      * Constructor for the AnnotationProcessor.
      */
     public AnnotationProcessor() {
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latest();
     }
 
     @Override
@@ -164,11 +168,11 @@ public class AnnotationProcessor extends AbstractProcessor {
                     TypeElement listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
                     if (processingEnv.getTypeUtils().isSameType(listTypeElement.asType(), declaredType.asElement().asType())) {
                         if (declaredType.getTypeArguments().size() == 1
-                                && declaredType.getTypeArguments().getFirst().getKind() == TypeKind.DECLARED
-                                && processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().getFirst()).getAnnotation(GenerateMutator.class) != null) {
+                                && declaredType.getTypeArguments().get(0).getKind() == TypeKind.DECLARED
+                                && processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0)).getAnnotation(GenerateMutator.class) != null) {
                             // Component is a list of elements annotated with GenerateMutator, add modifier function
-                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().getFirst());
-                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().getFirst());
+                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
+                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
                             String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
                             ClassName listElementMutatorClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName() + "Mutator");
                             ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
@@ -191,8 +195,8 @@ public class AnnotationProcessor extends AbstractProcessor {
 
                         } else {
                             // Simple list
-                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().getFirst());
-                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().getFirst());
+                            TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
+                            Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
                             String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
                             ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
 

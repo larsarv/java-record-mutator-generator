@@ -75,7 +75,7 @@ class MutableRecordListMutatorImplTest {
 
         // Assert
         assertEquals(3, newList.size());
-        assertSame(value, newList.getLast());
+        assertSame(value, newList.get(newList.size() - 1));
     }
 
     @Test
@@ -106,7 +106,7 @@ class MutableRecordListMutatorImplTest {
 
         // Assert
         assertEquals(1, newList.size());
-        assertSame(value, newList.getFirst());
+        assertSame(value, newList.get(0));
     }
 
     @Test
@@ -193,7 +193,7 @@ class MutableRecordListMutatorImplTest {
 
         // Assert
         assertEquals(2, newList.size());
-        assertNull(newList.getLast());
+        assertNull(newList.get(newList.size() - 1));
     }
 
     @Test
@@ -208,7 +208,7 @@ class MutableRecordListMutatorImplTest {
 
         // Assert
         assertEquals(3, mutator.build().size());
-        assertTrue(newList.getLast().test());
+        assertTrue(newList.get(newList.size() - 1).test());
     }
 
     @Test
