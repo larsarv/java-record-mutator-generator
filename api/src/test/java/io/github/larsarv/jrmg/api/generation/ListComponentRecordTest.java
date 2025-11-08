@@ -1,4 +1,4 @@
-package io.github.larsarv.jrmg.test.project;
+package io.github.larsarv.jrmg.api.generation;
 
 import org.junit.jupiter.api.Test;
 

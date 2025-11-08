@@ -162,4 +162,5 @@ class SimpleListMutatorImplTest {
         assertEquals(2, mutator.build().size());
         assertTrue(mutator.build().contains(null));
     }
+
 }

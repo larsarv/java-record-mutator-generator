@@ -1,8 +1,9 @@
-package io.github.larsarv.jrmg.test.project;
+package io.github.larsarv.jrmg.api.generation;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PrimitiveComponentRecordTest {
     private static final PrimitiveComponentRecord TEST_RECORD = new PrimitiveComponentRecord(
