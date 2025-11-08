@@ -1,5 +1,6 @@
 package io.github.larsarv.jrmg.api;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -37,6 +38,10 @@ public interface MutableRecordListMutator<T, M extends RecordMutator<T>> extends
     MutableRecordListMutator<T, M> filter(Predicate<T> filterFunction);
     @Override
     MutableRecordListMutator<T, M> updateAll(IndexedFunction<T> mutateFunction);
+    @Override
+    MutableRecordListMutator<T, M> sort(Comparator<? super T> comparator);
+    @Override
+    MutableRecordListMutator<T, M> move(int fromIndex, int toIndex);
 
     /**
      * Adds a new record to the end of the list using the provided record mutator.

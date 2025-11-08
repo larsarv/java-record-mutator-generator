@@ -2,6 +2,7 @@ package io.github.larsarv.jrmg.api;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -82,6 +83,22 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
                 list.set(index, newItem);
             }
         }
+        return this;
+    }
+
+    @Override
+    public MutableRecordListMutator<T, E> sort(Comparator<? super T> comparator) {
+        list.sort(comparator);
+        return this;
+    }
+
+    @Override
+    public MutableRecordListMutator<T, E> move(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || fromIndex >= list.size() || toIndex < 0 || toIndex >= list.size()) {
+            throw new IndexOutOfBoundsException("Index: " + fromIndex + ", Size: " + list.size());
+        }
+        T item = list.remove(fromIndex);
+        list.add(toIndex, item);
         return this;
     }
 

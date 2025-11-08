@@ -1,5 +1,6 @@
 package io.github.larsarv.jrmg.api;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -99,6 +100,35 @@ public interface SimpleListMutator<T> {
      * @return this mutator instance for method chaining
      */
     SimpleListMutator<T> updateAll(IndexedFunction<T> indexedMutateFunction);
+
+    /**
+     * Sorts the elements of the list in place according to the provided comparator.
+     * <p>
+     * This operation modifies the list in place and returns a reference to this mutator
+     * for method chaining.
+     * <p>
+     * The comparator defines the ordering of elements. If two elements are considered
+     * equal by the comparator, their relative positions in the list are not guaranteed
+     * to be preserved.
+     *
+     * @param comparator the comparator to determine the order of the list
+     * @return this mutator instance for method chaining
+     */
+    SimpleListMutator<T> sort(Comparator<? super T> comparator);
+
+    /**
+     * Moves an element from one index to another in the list.
+     * <p>
+     * This operation modifies the list in place and returns a reference to this mutator
+     * for method chaining.
+     * <p>
+     * If either index is out of bounds, an {@link IndexOutOfBoundsException} is thrown.
+     *
+     * @param fromIndex the index of the element to move
+     * @param toIndex the index to move the element to
+     * @return this mutator instance for method chaining
+     */
+    SimpleListMutator<T> move(int fromIndex, int toIndex);
 
     /**
      * Finalizes the mutable list and returns an immutable copy.

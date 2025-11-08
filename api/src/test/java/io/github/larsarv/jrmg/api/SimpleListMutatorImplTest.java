@@ -163,4 +163,51 @@ class SimpleListMutatorImplTest {
         assertTrue(mutator.build().contains(null));
     }
 
+    @Test
+    void shouldSortListWithNaturalOrderComparator() {
+        // Arrange
+        List<String> originalList = Arrays.asList("banana", "apple", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act
+        mutator.sort(String::compareTo);
+
+        // Assert
+        List<String> builtList = mutator.build();
+        assertEquals(Arrays.asList("apple", "banana", "cherry"), builtList);
+    }
+
+    @Test
+    void shouldMoveElementFromIndex0ToIndex1() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act
+        mutator.move(0, 1);
+
+        // Assert
+        List<String> builtList = mutator.build();
+        assertEquals(Arrays.asList("banana", "apple", "cherry"), builtList);
+    }
+
+    @Test
+    void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex0ToIndex3() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act & Assert
+        assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(0, 3));
+    }
+
+    @Test
+    void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex2ToIndexMinus1() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act & Assert
+        assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(3, -1));
+    }
 }

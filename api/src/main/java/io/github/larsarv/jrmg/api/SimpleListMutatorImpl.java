@@ -2,6 +2,7 @@ package io.github.larsarv.jrmg.api;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -77,6 +78,23 @@ public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
                 list.set(index, newItem);
             }
         }
+        return this;
+    }
+
+
+    @Override
+    public SimpleListMutator<T> sort(Comparator<? super T> comparator) {
+        list.sort(comparator);
+        return this;
+    }
+
+    @Override
+    public SimpleListMutator<T> move(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || fromIndex >= list.size() || toIndex < 0 || toIndex >= list.size()) {
+            throw new IndexOutOfBoundsException("Index: " + fromIndex + ", Size: " + list.size());
+        }
+        T item = list.remove(fromIndex);
+        list.add(toIndex, item);
         return this;
     }
 

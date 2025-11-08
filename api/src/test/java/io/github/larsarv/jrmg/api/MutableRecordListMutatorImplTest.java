@@ -8,9 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class MutableRecordListMutatorImplTest {
 
-    record TestRecord(
-            boolean test
-    ) {
+    record TestRecord(boolean test) {
         public TestRecord() {
             this(false);
         }
@@ -31,6 +29,26 @@ class MutableRecordListMutatorImplTest {
 
         public TestRecordMutator setTest(boolean value) {
             test = value;
+            return this;
+        }
+    }
+    record StringRecord(String value) {}
+    static class StringRecordMutator implements RecordMutator<StringRecord> {
+        String value;
+
+        public StringRecordMutator(StringRecord stringRecord) {
+            if (stringRecord != null) {
+                this.value = stringRecord.value;
+            }
+        }
+
+        @Override
+        public StringRecord build() {
+            return new StringRecord(value);
+        }
+
+        public StringRecordMutator setValue(String value) {
+            this.value = value;
             return this;
         }
     }
@@ -240,19 +258,68 @@ class MutableRecordListMutatorImplTest {
     }
 
     @Test
-    void shouldMutateAllElementsUsingIndexedFunction() {
+    void shouldSortListWithNaturalOrderComparator() {
+        // Arrange
+        List<StringRecord> originalList = Arrays.asList(
+                new StringRecord("banana"),
+                new StringRecord("apple"),
+                new StringRecord("cherry"));
+
+        var mutator = new MutableRecordListMutatorImpl<>(originalList, StringRecordMutator::new);
+
+        // Act
+        mutator.sort(Comparator.comparing(r -> r.value));
+        List<StringRecord> builtList = mutator.build();
+
+        // Assert
+        assertEquals(
+                Arrays.asList(
+                        new StringRecord("apple"),
+                        new StringRecord("banana"),
+                        new StringRecord("cherry")),
+                builtList);
+    }
+
+    @Test
+    void shouldMoveElementFromIndex0ToIndex1() {
+        // Arrange
+        List<StringRecord> originalList = Arrays.asList(
+                new StringRecord("banana"),
+                new StringRecord("apple"),
+                new StringRecord("cherry"));
+
+        var mutator = new MutableRecordListMutatorImpl<>(originalList, StringRecordMutator::new);
+
+        // Act
+        mutator.move(0, 1);
+        List<StringRecord> builtList = mutator.build();
+
+        // Assert
+        assertEquals(
+                Arrays.asList(
+                        new StringRecord("apple"),
+                        new StringRecord("banana"),
+                        new StringRecord("cherry")),
+                builtList);
+    }
+
+    @Test
+    void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex0ToIndex3() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
         MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
 
-        // Act
-        mutator.mutateAll((index, m) -> m.setTest(true));
-        List<TestRecord> newList = mutator.build();
-
-        // Assert
-        assertTrue(newList.get(0).test());
-        assertTrue(newList.get(1).test());
-        assertTrue(newList.get(2).test());
+        // Act & Assert
+        assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(0, 3));
     }
 
+    @Test
+    void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex2ToIndexMinus1() {
+        // Arrange
+        List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
+        MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
+
+        // Act & Assert
+        assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(3, -1));
+    }
 }
