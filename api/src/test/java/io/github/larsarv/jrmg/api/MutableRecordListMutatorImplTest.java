@@ -154,7 +154,7 @@ class MutableRecordListMutatorImplTest {
     }
 
     @Test
-    void shouldBuildImmutableListCopy() {
+    void shouldReturnImmutableListCopyOnBuild() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
         MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
@@ -165,6 +165,47 @@ class MutableRecordListMutatorImplTest {
         // Assert
         assertEquals(originalList, builtList);
         assertEquals(2, builtList.size());
+    }
+
+    @Test
+    void shouldThrowExceptionOnModificationAfterBuild() {
+        // Arrange
+        List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
+        MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
+
+        // Act
+        List<TestRecord> builtList = mutator.build();
+
+        // Assert
+        assertThrows(IllegalStateException.class, () -> mutator.move(0, 1));
+        assertDoesNotThrow(() -> mutator.get(0));
+    }
+
+    @Test
+    void shouldReturnImmutableListCopyOnBuildCopy() {
+        // Arrange
+        List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
+        MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
+
+        // Act
+        List<TestRecord> builtList = mutator.buildCopy();
+
+        // Assert
+        assertEquals(originalList, builtList);
+        assertEquals(2, builtList.size());
+    }
+
+    @Test
+    void shouldNotThrowExceptionOnModificationAfterBuildCopy() {
+        // Arrange
+        List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
+        MutableRecordListMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordListMutatorImpl<>(originalList, TestRecordMutator::new);
+
+        // Act
+        List<TestRecord> builtList = mutator.buildCopy();
+
+        // Assert
+        assertDoesNotThrow(() -> mutator.move(0, 1));
     }
 
     @Test

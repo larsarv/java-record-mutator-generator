@@ -104,7 +104,7 @@ class SimpleListMutatorImplTest {
     }
 
     @Test
-    void shouldBuildImmutableListCopy() {
+    void shouldReturnImmutableListCopyOnBuild() {
         // Arrange
         List<String> originalList = Arrays.asList("apple", "banana");
         SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
@@ -115,6 +115,49 @@ class SimpleListMutatorImplTest {
         // Assert
         assertEquals(originalList, builtList);
         assertEquals(2, builtList.size());
+    }
+
+    @Test
+    void shouldThrowExceptionOnModificationAfterBuild() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act
+        mutator.set(1, "grape");
+        List<String> builtList = mutator.build();
+
+        // Assert
+        assertThrows(IllegalStateException.class, () -> mutator.move(0, 1));
+        assertDoesNotThrow(() -> mutator.get(0));
+    }
+
+    @Test
+    void shouldReturnImmutableListCopyOnBuildCopy() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act
+        List<String> builtList = mutator.buildCopy();
+
+        // Assert
+        assertEquals(originalList, builtList);
+        assertEquals(2, builtList.size());
+    }
+
+    @Test
+    void shouldNotThrowExceptionOnModificationAfterBuildCopy() {
+        // Arrange
+        List<String> originalList = Arrays.asList("apple", "banana", "cherry");
+        SimpleListMutatorImpl<String> mutator = new SimpleListMutatorImpl<>(originalList);
+
+        // Act
+        mutator.set(1, "grape");
+        List<String> builtList = mutator.buildCopy();
+
+        // Assert
+        assertDoesNotThrow(() -> mutator.move(0, 1));
     }
 
     @Test

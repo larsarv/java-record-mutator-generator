@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> implements MutableRecordListMutator<T, E> {
     private final List<T> list;
     private final Function<T, E> elementMutatorFactory;
+    private boolean locked = false;
 
     /**
      * Constructs a new instance of MutableRecordListMutatorImpl for the specified list and element mutator factory.
@@ -52,30 +53,45 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
 
     @Override
     public MutableRecordListMutator<T, E> set(int index, T record) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.set(index, record);
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> add(T record) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.add(record);
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> remove(int index) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.remove(index);
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> filter(Predicate<T> filterFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.removeIf(t -> !filterFunction.test(t));
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> updateAll(IndexedFunction<T> mutateFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         for (int index = 0; index != list.size(); ++index) {
             T orgItem = list.get(index);
             T newItem = mutateFunction.apply(index, orgItem);
@@ -88,12 +104,18 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
 
     @Override
     public MutableRecordListMutator<T, E> sort(Comparator<? super T> comparator) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.sort(comparator);
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> move(int fromIndex, int toIndex) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         if (fromIndex < 0 || fromIndex >= list.size() || toIndex < 0 || toIndex >= list.size()) {
             throw new IndexOutOfBoundsException("Index: " + fromIndex + ", Size: " + list.size());
         }
@@ -104,18 +126,27 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
 
     @Override
     public MutableRecordListMutator<T, E> set(int index, E recordMutator) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.set(index, recordMutator.build());
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> add(E recordMutator) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.add(recordMutator.build());
         return this;
     }
 
     @Override
     public MutableRecordListMutator<T, E> mutate(int index, Function<E, E> modifierFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         T orgValue = list.get(index);
         T newValue = modifierFunction.apply(elementMutatorFactory.apply(orgValue)).build();
         list.set(index, newValue);
@@ -124,6 +155,9 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
 
     @Override
     public MutableRecordListMutator<T, E> mutateAll(IndexedFunction<E> modifierFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         for (int index = 0; index < list.size(); index++) {
             T orgValue = list.get(index);
             T newValue = modifierFunction.apply(index, elementMutatorFactory.apply(orgValue)).build();
@@ -134,6 +168,12 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
 
     @Override
     public List<T> build() {
+        this.locked = true;
+        return Collections.unmodifiableList(list);
+    }
+
+    @Override
+    public List<T> buildCopy() {
         return Collections.unmodifiableList(new ArrayList<>(list));
     }
 }

@@ -134,9 +134,20 @@ public interface SimpleListMutator<T> {
      * Finalizes the mutable list and returns an immutable copy.
      * <p>
      * This method creates an immutable list from the current state of the mutator.
-     * Any further mutations will not affect the returned list.
+     * Any further mutations will trigger a {@link java.lang.IllegalStateException}
      *
      * @return an immutable list containing the current elements
      */
     List<T> build();
+
+    /**
+     * Finalizes the mutable list and returns an immutable copy.
+     * <p>
+     * This method creates an immutable list from the current state of the mutator.
+     * Any further mutations will not affect the returned list.
+     *
+     * @return an immutable list containing the current elements
+     */
+    List<T> buildCopy();
+
 }

@@ -25,6 +25,7 @@ import java.util.function.Predicate;
  */
 public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
     private final List<T> list;
+    private boolean locked = false;
 
     /**
      * Constructs a new instance of SimpleListMutatorImpl for the specified list and element mutator factory.
@@ -47,30 +48,45 @@ public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
 
     @Override
     public SimpleListMutator<T> set(int index, T record) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.set(index, record);
         return this;
     }
 
     @Override
     public SimpleListMutator<T> add(T record) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.add(record);
         return this;
     }
 
     @Override
     public SimpleListMutator<T> remove(int index) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.remove(index);
         return this;
     }
 
     @Override
     public SimpleListMutator<T> filter(Predicate<T> filterFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.removeIf(t -> !filterFunction.test(t));
         return this;
     }
 
     @Override
     public SimpleListMutator<T> updateAll(IndexedFunction<T> indexedMutateFunction) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         for (int index = 0; index != list.size(); ++index) {
             T orgItem = list.get(index);
             T newItem = indexedMutateFunction.apply(index, orgItem);
@@ -81,15 +97,20 @@ public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
         return this;
     }
 
-
     @Override
     public SimpleListMutator<T> sort(Comparator<? super T> comparator) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         list.sort(comparator);
         return this;
     }
 
     @Override
     public SimpleListMutator<T> move(int fromIndex, int toIndex) {
+        if (locked) {
+            throw new IllegalStateException("List is locked and cannot be modified.");
+        }
         if (fromIndex < 0 || fromIndex >= list.size() || toIndex < 0 || toIndex >= list.size()) {
             throw new IndexOutOfBoundsException("Index: " + fromIndex + ", Size: " + list.size());
         }
@@ -100,6 +121,12 @@ public class SimpleListMutatorImpl<T> implements SimpleListMutator<T> {
 
     @Override
     public List<T> build() {
+        this.locked = true;
+        return Collections.unmodifiableList(list);
+    }
+
+    @Override
+    public List<T> buildCopy() {
         return Collections.unmodifiableList(new ArrayList<>(list));
     }
 }
