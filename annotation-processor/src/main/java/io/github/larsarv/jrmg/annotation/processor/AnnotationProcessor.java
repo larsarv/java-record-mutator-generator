@@ -41,17 +41,14 @@ public class AnnotationProcessor extends AbstractProcessor {
     private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
     private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
 
-    private static final ClassName SIMPLE_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
     private static final ClassName SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleListMutateFunction.class);
-
-    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(MutableRecordListMutatorImpl.class);
     private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordListMutateFunction.class);
+    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(ListMutatorImpl.class);
 
-    private static final ClassName SIMPLE_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(SimpleSetMutatorImpl.class);
+
     private static final ClassName SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleSetMutateFunction.class);
-
-    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(MutableRecordSetMutatorImpl.class);
     private static final ClassName MUTABLE_RECORD_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordSetMutateFunction.class);
+    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(SetMutatorImpl.class);
 
     private TypeElement generateMutatorTypeElement;
     private TypeElement listTypeElement;
@@ -294,7 +291,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                                     componentName,
                                     fieldName,
                                     SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME,
-                                    SIMPLE_LIST_MUTATOR_IMPL_CLASSNAME);
+                                    MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME);
 
                         }
                     } else if (isSet(declaredType)) {
@@ -318,7 +315,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                                     componentName,
                                     fieldName,
                                     SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME,
-                                    SIMPLE_SET_MUTATOR_IMPL_CLASSNAME);
+                                    MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME);
 
                         }
                     }
@@ -372,7 +369,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                                 typeName),
                         "mutateFunction")
                 // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N)).build()", fieldName, mutatorimplClassName, fieldName)
+                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, null)).build()", fieldName, mutatorimplClassName, fieldName)
                 .addStatement("return this")
                 .build();
 

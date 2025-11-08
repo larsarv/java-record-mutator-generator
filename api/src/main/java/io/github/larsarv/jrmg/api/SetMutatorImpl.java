@@ -22,7 +22,7 @@ import java.util.function.Predicate;
  * @param <T> the type of elements in the set
  * @param <M> the type of record mutator used to modify the record
  */
-public class MutableRecordSetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRecordSetMutator<T, M> {
+public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRecordSetMutator<T, M> {
     private Set<T> set;
     private final Function<T, M> elementMutatorFactory;
     private boolean locked = false;
@@ -33,7 +33,7 @@ public class MutableRecordSetMutatorImpl<T, M extends RecordMutator<T>> implemen
      * @param set the set to be copied into the internal mutable set; may be {@code null}
      * @param elementMutatorFactory a function that generates a mutator for each element in the set
      */
-    public MutableRecordSetMutatorImpl(Set<T> set, Function<T, M> elementMutatorFactory) {
+    public SetMutatorImpl(Set<T> set, Function<T, M> elementMutatorFactory) {
         this.set = set == null ? new HashSet<>() : new HashSet<>(set);
         this.elementMutatorFactory = elementMutatorFactory;
     }

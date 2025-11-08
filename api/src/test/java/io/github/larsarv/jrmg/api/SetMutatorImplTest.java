@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 
-class MutableRecordSetMutatorImplTest {
+class SetMutatorImplTest {
 
     record TestRecord(boolean test) {
         public TestRecord() {
@@ -56,7 +56,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldSetElementInSet() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("banana"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
 
         // Act
@@ -67,10 +67,10 @@ class MutableRecordSetMutatorImplTest {
     }
 
     @Test
-    void shouldAddElementToTheSet() {
+    void shouldAddElementToSet() {
         // Arrange
         var originalSet = Set.of(new StringRecord("apple"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(originalSet, StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(originalSet, StringRecordMutator::new);
         StringRecord value = new StringRecord("banana");
 
         // Act
@@ -86,7 +86,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldRemoveElementFromSet() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("banana"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         mutator.remove(originalList.get(1));
@@ -101,7 +101,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldFilterSetByProvidedPredicate() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("banana"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         mutator.filter(i -> !i.value().equals("banana"));
@@ -116,7 +116,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldUpdateAllElementsUsingIndexedFunction() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("banana"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         mutator.updateAll(item -> new StringRecord("banana"));
@@ -131,7 +131,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldReturnImmutableSetCopyOnBuild() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord(true), new TestRecord(false));
-        MutableRecordSetMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordSetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.build();
@@ -145,7 +145,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldThrowExceptionOnModificationAfterBuild() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         Set<StringRecord> builtSet = mutator.build();
@@ -159,7 +159,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldReturnImmutableSetCopyOnBuildCopy() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord(true), new TestRecord(false));
-        MutableRecordSetMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordSetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.buildCopy();
@@ -173,7 +173,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldNotThrowExceptionOnModificationAfterBuildCopy() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         Set<StringRecord> builtSet = mutator.buildCopy();
@@ -185,7 +185,7 @@ class MutableRecordSetMutatorImplTest {
     @Test
     void shouldHandleNullSetInConstructor() {
         // Arrange
-        MutableRecordSetMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordSetMutatorImpl<>(null, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(null, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.build();
@@ -198,7 +198,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldAllowAddingNullElementToTheSet() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord());
-        MutableRecordSetMutatorImpl<TestRecord, TestRecordMutator> mutator = new MutableRecordSetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         mutator.add((TestRecord) null);
@@ -212,7 +212,7 @@ class MutableRecordSetMutatorImplTest {
     void shouldAddRecordMutatorToTheSet() {
         // Arrange
         var originalList = List.of(new StringRecord("apple"), new StringRecord("cherry"));
-        var mutator = new MutableRecordSetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
+        var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
         mutator.add(new StringRecordMutator(new StringRecord("banana")));

@@ -25,7 +25,7 @@ import java.util.function.Predicate;
  * @param <T> the type of records stored in the list. Should be a record type
  * @param <E> the type of {@link RecordMutator} used to mutate records of type {@code T}
  */
-public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> implements MutableRecordListMutator<T, E> {
+public class ListMutatorImpl<T, E extends RecordMutator<T>> implements MutableRecordListMutator<T, E> {
     private final List<T> list;
     private final Function<T, E> elementMutatorFactory;
     private boolean locked = false;
@@ -36,7 +36,7 @@ public class MutableRecordListMutatorImpl<T, E extends RecordMutator<T>> impleme
      * @param list the initial list to be wrapped; if null, an empty list is created
      * @param elementMutatorFactory a function that generates a mutator for each element in the list
      */
-    public MutableRecordListMutatorImpl(List<T> list, Function<T, E> elementMutatorFactory) {
+    public ListMutatorImpl(List<T> list, Function<T, E> elementMutatorFactory) {
         this.list = list == null ? new ArrayList<>(): new ArrayList<>(list);
         this.elementMutatorFactory = elementMutatorFactory;
     }
