@@ -1,4 +1,4 @@
-package io.github.larsarv.jrmg.test.project.example.domain;
+package io.github.larsarv.jrmg.example.project.domain;
 
 import io.github.larsarv.jrmg.api.GenerateMutator;
 

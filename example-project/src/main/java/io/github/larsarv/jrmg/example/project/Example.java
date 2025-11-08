@@ -1,7 +1,7 @@
-package io.github.larsarv.jrmg.test.project.example;
+package io.github.larsarv.jrmg.example.project;
 
-import io.github.larsarv.jrmg.test.project.example.domain.Invoice;
-import io.github.larsarv.jrmg.test.project.example.domain.InvoiceMutator;
+import io.github.larsarv.jrmg.example.project.domain.Invoice;
+import io.github.larsarv.jrmg.example.project.domain.InvoiceMutator;
 
 public class Example {
     public static Invoice mutate(Invoice invoice) {

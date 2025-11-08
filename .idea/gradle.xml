@@ -11,7 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/annotation-processor" />
             <option value="$PROJECT_DIR$/api" />
-            <option value="$PROJECT_DIR$/test-project" />
+            <option value="$PROJECT_DIR$/example-project" />
           </set>
         </option>
       </GradleProjectSettings>
