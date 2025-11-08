@@ -1,8 +1,8 @@
 # The Java Record Mutator Generator  (JRMG)
 ## Overview
 The Java Record Mutator Generator (JRMG) is a compile-time annotation processor that automatically generates fluent 
-mutator classes for Java records. It enables developers to create chainable operations to 
-modify record fields without resorting to complex workarounds or manual builder patterns.
+mutator/builder classes for Java records. It enables developers to create chainable operations to 
+modify nested record fields without resorting to complex workarounds or manual builder patterns.
 
 Records in Java are immutable by default, which makes modifying them cumbersome — especially when dealing with nested 
 structures or complex business logic. JRMG solves this problem by generating a mutator class for each annotated record, 
@@ -12,6 +12,7 @@ allowing developers to modify nested records in a fluent, builder-like manner.
 - Fluent API: Generated mutators provide a chainable, readable API for modifying record components.
 - Immutable Output: All mutations result in a new immutable record instance.
 - Nested Record Support: Enabling deep mutation.
+- Can act as builders.
 - List Support: Lists can be mutated using specialized mutator interfaces (SimpleListMutator and
   MutableRecordListMutator), allowing you to mutate individual records or apply transformations to all items.
 - Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
