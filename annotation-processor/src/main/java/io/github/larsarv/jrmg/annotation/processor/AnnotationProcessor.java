@@ -39,12 +39,23 @@ import java.util.function.Function;
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
     private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
-    private static final ClassName MUTABLERECORDLISTMUTATORIMPL_CLASSNAME = ClassName.get(MutableRecordListMutatorImpl.class);
-    private static final ClassName SIMPLELISTMUTATORIMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
     private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
+
+    private static final ClassName SIMPLE_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(SimpleListMutatorImpl.class);
+    private static final ClassName SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleListMutateFunction.class);
+
+    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(MutableRecordListMutatorImpl.class);
+    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordListMutateFunction.class);
+
+    private static final ClassName SIMPLE_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(SimpleSetMutatorImpl.class);
+    private static final ClassName SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleSetMutateFunction.class);
+
+    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(MutableRecordSetMutatorImpl.class);
+    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordSetMutateFunction.class);
 
     private TypeElement generateMutatorTypeElement;
     private TypeElement listTypeElement;
+    private TypeElement setTypeElement;
 
     /**
      * Constructor for the AnnotationProcessor.
@@ -62,6 +73,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         super.init(processingEnv);
         generateMutatorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_MUTATOR_CLASS_NAME);
         listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
+        setTypeElement = processingEnv.getElementUtils().getTypeElement(Set.class.getCanonicalName());
     }
 
     @Override
@@ -264,21 +276,49 @@ public class AnnotationProcessor extends AbstractProcessor {
                     if (isList(declaredType)) {
                         if (hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(declaredType)) {
                             // Component is a list of elements annotated with GenerateMutator, add modifier function
-                            addMutateFunctionForListOfRecordAnnotatedWithGenerateMutator(
+                            addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
                                     mutatorClassName,
                                     mutatorClassBuilder,
                                     declaredType,
                                     componentName,
-                                    fieldName);
+                                    fieldName,
+                                    MUTABLE_RECORD_LIST_MUTATOR_FUNCTION_CLASS_NAME,
+                                    MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME);
 
                         } else {
                             // Simple list
-                            addMutatorForSimpleList(
+                            addMutatorForSimpleCollection(
                                     mutatorClassName,
                                     mutatorClassBuilder,
                                     declaredType,
                                     componentName,
-                                    fieldName);
+                                    fieldName,
+                                    SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME,
+                                    SIMPLE_LIST_MUTATOR_IMPL_CLASSNAME);
+
+                        }
+                    } else if (isSet(declaredType)) {
+                        if (hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(declaredType)) {
+                            // Component is a set of elements annotated with GenerateMutator, add modifier function
+                            addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
+                                    mutatorClassName,
+                                    mutatorClassBuilder,
+                                    declaredType,
+                                    componentName,
+                                    fieldName,
+                                    MUTABLE_RECORD_SET_MUTATOR_FUNCTION_CLASS_NAME,
+                                    MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME);
+
+                        } else {
+                            // Simple set
+                            addMutatorForSimpleCollection(
+                                    mutatorClassName,
+                                    mutatorClassBuilder,
+                                    declaredType,
+                                    componentName,
+                                    fieldName,
+                                    SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME,
+                                    SIMPLE_SET_MUTATOR_IMPL_CLASSNAME);
 
                         }
                     }
@@ -300,18 +340,23 @@ public class AnnotationProcessor extends AbstractProcessor {
     private boolean isList(DeclaredType declaredType) {
         return processingEnv.getTypeUtils().isSameType(listTypeElement.asType(), declaredType.asElement().asType());
     }
+    private boolean isSet(DeclaredType declaredType) {
+        return processingEnv.getTypeUtils().isSameType(setTypeElement.asType(), declaredType.asElement().asType());
+    }
 
     private static boolean isRecordAnnotatedWithGenerateMutator(Element typeElement) {
         return typeElement.getAnnotation(GenerateMutator.class) != null &&
                 typeElement.getKind() == ElementKind.RECORD;
     }
 
-    private void addMutatorForSimpleList(
+    private void addMutatorForSimpleCollection(
             ClassName mutatorClassName,
             TypeSpec.Builder mutatorClassBuilder,
             DeclaredType declaredType,
             String componentName,
-            String fieldName
+            String fieldName,
+            ClassName mutatorFunctionClassName,
+            ClassName mutatorimplClassName
     ) {
         TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
         Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
@@ -323,23 +368,25 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .returns(mutatorClassName)
                 .addParameter(
                         ParameterizedTypeName.get(
-                                ClassName.get(SimpleListMutateFunction.class),
+                                mutatorFunctionClassName,
                                 typeName),
                         "mutateFunction")
                 // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N)).build()", fieldName, SIMPLELISTMUTATORIMPL_CLASSNAME, fieldName)
+                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N)).build()", fieldName, mutatorimplClassName, fieldName)
                 .addStatement("return this")
                 .build();
 
         mutatorClassBuilder.addMethod(mutateMethod);
     }
 
-    private void addMutateFunctionForListOfRecordAnnotatedWithGenerateMutator(
+    private void addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
             ClassName mutatorClassName,
             TypeSpec.Builder mutatorClassBuilder,
             DeclaredType declaredType,
             String componentName,
-            String fieldName
+            String fieldName,
+            ClassName mutatorFunctionClassName,
+            ClassName mutatorimplClassName
     ) {
         TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
         Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
@@ -352,12 +399,12 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .returns(mutatorClassName)
                 .addParameter(
                         ParameterizedTypeName.get(
-                                ClassName.get(MutableRecordListMutateFunction.class),
+                                mutatorFunctionClassName,
                                 typeName, listElementMutatorClassName),
                         "mutateFunction")
                 // Function<InvoiceLineItem,InvoiceLineItemMutator>
                 .addStatement("$T<$T,$T> constructor = $T::mutator", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
-                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, MUTABLERECORDLISTMUTATORIMPL_CLASSNAME, fieldName)
+                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, mutatorimplClassName, fieldName)
                 .addStatement("return this")
                 .build();
 

@@ -13,8 +13,8 @@ allowing developers to modify nested records in a fluent, builder-like manner.
 - Immutable Output: All mutations result in a new immutable record instance.
 - Nested Record Support: Enabling deep mutation.
 - Can act as builders.
-- List Support: Lists can be mutated using specialized mutator interfaces (SimpleListMutator and
-  MutableRecordListMutator), allowing you to mutate individual records or apply transformations to all items.
+- List and Set Support: Lists and Sets can be mutated using specialized mutator interfaces, 
+  allowing you to mutate individual items or apply transformations to all items.
 - Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
 - Type Safety: Fully type-safe — all generated methods are strongly typed and checked at compile time.
 - Supports Java 17+

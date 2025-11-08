@@ -9,20 +9,9 @@ import java.util.function.Predicate;
  * A mutator interface for mutable lists of records, allowing for fluent, chainable operations
  * to modify the contents of a list.
  * <p>
- * This interface extends {@link SimpleListMutator} and adds methods to manipulate records
- * using {@link RecordMutator} instances, enabling more complex transformations that
- * involve mutating the internal state of records.
- * <p>
- * The mutator operates on a list of type {@code T}, where each element can be mutated
- * using a {@code RecordMutator<T>}.
- * <p>
- * Methods such as {@link #add(RecordMutator)}, {@link #set(int, RecordMutator)}, and {@link #mutate(int, Function)}
- * allow for modifying the list's contents through record mutators, while {@link #mutateAll(IndexedFunction)}
- * allows for mutating all records in the list based on their index.
- * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable list of the modified records.
  *
- * @param <T> the type the list element. Should be a record
+ * @param <T> the type the list element. Should be a record annotated with {@link GenerateMutator}.
  * @param <M> the type of record mutator used to modify the record
  */
 public interface MutableRecordListMutator<T, M extends RecordMutator<T>> extends SimpleListMutator<T> {

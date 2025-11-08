@@ -11,11 +11,6 @@ import java.util.function.Predicate;
  * <p>
  * The interface supports type parameter {@code T}, which represents the type of elements in the list.
  * <p>
- * Methods like {@link #set(int, T)}, {@link #add(T)}, and {@link #remove(int)} allow direct manipulation
- * of the list's contents. The {@link #filter(Predicate)} method allows filtering elements based on a predicate.
- * The {@link #updateAll(IndexedFunction)} method allows applying a transformation function to each element
- * based on its index.
- * <p>
  * The {@link #build()} method finalizes all mutations and returns an immutable list.
  *
  * @param <T> the type of elements in the list
