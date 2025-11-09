@@ -190,7 +190,6 @@ public class TypeInfoFactory {
                                     CLASS_NAME_MAP_MUTATOR_IMPL,
                                     ParameterizedTypeName.get(
                                             CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION,
-                                            typeName,
                                             keyTypeInfo.getTypeName(),
                                             valueTypeInfo.getTypeName()));
                         }
