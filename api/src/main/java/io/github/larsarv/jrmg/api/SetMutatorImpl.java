@@ -5,7 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * An implementation of {@link MutableRecordSetMutator} that provides a fluent API for mutating a set of records.
+ * An implementation of {@link NestedSetMutator} that provides a fluent API for mutating a set of records.
  * <p>
  * This implementation maintains a mutable set internally and provides methods to
  * modify its contents. It allows for adding, removing, filtering, and updating elements of the set.
@@ -19,10 +19,10 @@ import java.util.function.Predicate;
  * This class is designed for use in fluent APIs where operations are chained together before finalizing
  * the result with {@link #build()}.
  *
- * @param <T> the type of elements in the set
- * @param <M> the type of record mutator used to modify the record
+ * @param <T> the type of elements stored in the set.
+ * @param <M> the type of {@link Mutator} used to mutate the elements of type {@code T}
  */
-public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRecordSetMutator<T, M> {
+public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator<T, M> {
     private Set<T> set;
     private final Function<T, M> elementMutatorFactory;
     private boolean locked = false;
@@ -38,6 +38,22 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
         this.elementMutatorFactory = elementMutatorFactory;
     }
 
+    /**
+     * Creates a new set mutator for the specified set, using the provided element mutator factory.
+     * <p>
+     * Each element in the set can be individually mutated using the factory-provided mutator.
+     *
+     * @param <T> the type of elements stored in the set.
+     * @param <E> the type of {@link Mutator} used to mutate the elements of type {@code T}
+     * @param set the initial set to be wrapped; if null, an empty set is created
+     * @param elementMutatorFactory a function that generates a mutator for each element in the set,
+     *                              null if the element data type is simple
+     * @return a new set mutator instance that can be used to modify the set
+     */
+    public static <T, E extends Mutator<T>> NestedSetMutator<T, E> mutator(Set<T> set, Function<T, E> elementMutatorFactory) {
+        return new SetMutatorImpl<>(set, elementMutatorFactory);
+    }
+
     @Override
     public int size() {
         return set.size();
@@ -49,7 +65,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> add(T record) {
+    public NestedSetMutator<T, M> add(T record) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -58,7 +74,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> remove(T record) {
+    public NestedSetMutator<T, M> remove(T record) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -67,7 +83,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> filter(Predicate<T> filterFunction) {
+    public NestedSetMutator<T, M> filter(Predicate<T> filterFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -76,7 +92,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> update(T record, SimpleFunction<T> mutateFunction) {
+    public NestedSetMutator<T, M> update(T record, SimpleFunction<T> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -88,7 +104,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> updateAll(SimpleFunction<T> mutateFunction) {
+    public NestedSetMutator<T, M> updateAll(SimpleFunction<T> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -102,16 +118,16 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> add(M recordMutator) {
+    public NestedSetMutator<T, M> add(Function<M, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
-        set.add(recordMutator.build());
+        set.add(mutateFunction.apply(elementMutatorFactory.apply(null)).build());
         return this;
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction) {
+    public NestedSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -123,7 +139,7 @@ public class SetMutatorImpl<T, M extends RecordMutator<T>> implements MutableRec
     }
 
     @Override
-    public MutableRecordSetMutator<T, M> mutateAll(Function<M, M> mutateFunction) {
+    public NestedSetMutator<T, M> mutateAll(Function<M, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }

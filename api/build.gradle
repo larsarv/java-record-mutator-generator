@@ -110,3 +110,10 @@ java {
 test {
     useJUnitPlatform()
 }
+/*
+compileTestJava {
+    options.fork = true
+    options.forkOptions.jvmArgs << "-Xdebug"
+    options.forkOptions.jvmArgs << "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+}
+*/

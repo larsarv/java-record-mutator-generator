@@ -13,7 +13,7 @@ class ListMutatorImplTest {
             this(false);
         }
     }
-    static class TestRecordMutator implements RecordMutator<TestRecord> {
+    static class TestRecordMutator implements Mutator<TestRecord> {
         boolean test;
         
         public TestRecordMutator(TestRecord testRecord) {
@@ -33,7 +33,7 @@ class ListMutatorImplTest {
         }
     }
     record StringRecord(String value) {}
-    static class StringRecordMutator implements RecordMutator<StringRecord> {
+    static class StringRecordMutator implements Mutator<StringRecord> {
         String value;
 
         public StringRecordMutator(StringRecord stringRecord) {
@@ -262,7 +262,7 @@ class ListMutatorImplTest {
         ListMutatorImpl<TestRecord, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
 
         // Act
-        mutator.add(new TestRecordMutator(new TestRecord(true)));
+        mutator.add(m -> m.setTest(true));
         List<TestRecord> newList = mutator.build();
 
         // Assert

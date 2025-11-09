@@ -9,7 +9,7 @@ import java.util.function.Predicate;
  * to modify the contents of a set.
  * <p>
  * This interface extends {@link SimpleSetMutator} and adds methods to manipulate records
- * using {@link RecordMutator} instances, enabling more complex transformations that
+ * using {@link Mutator} instances, enabling more complex transformations that
  * involve mutating the internal state of records.
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable set of the modified records.
@@ -17,26 +17,26 @@ import java.util.function.Predicate;
  * @param <T> the type the set element. Should be a record annotated with {@link GenerateMutator}.
  * @param <M> the type of record mutator used to modify the record
  */
-public interface MutableRecordSetMutator<T, M extends RecordMutator<T>> extends SimpleSetMutator<T> {
+public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMutator<T> {
     @Override
-    MutableRecordSetMutator<T,M> add(T record);
+    NestedSetMutator<T,M> add(T record);
     @Override
-    MutableRecordSetMutator<T,M> remove(T record);
+    NestedSetMutator<T,M> remove(T record);
     @Override
-    MutableRecordSetMutator<T,M> filter(Predicate<T> filterFunction);
+    NestedSetMutator<T,M> filter(Predicate<T> filterFunction);
     @Override
-    MutableRecordSetMutator<T,M> update(T item, SimpleFunction<T> mutateFunction);
+    NestedSetMutator<T,M> update(T item, SimpleFunction<T> mutateFunction);
     @Override
-    MutableRecordSetMutator<T,M> updateAll(SimpleFunction<T> mutateFunction);
+    NestedSetMutator<T,M> updateAll(SimpleFunction<T> mutateFunction);
 
     /**
-     * Adds a new record to the set using the provided record mutator.
-     * The mutator is used to construct the record before adding it to the set.
+     * Adds a new element to the end of the set using the provided mutator function.
+     * The mutator is used to construct the element before appending it to the set.
      *
-     * @param recordMutator the mutator used to create the record to be added
-     * @return a new instance of this mutator with the record added
+     * @param mutateFunction the mutator function used to create the element to be added
+     * @return this mutator instance for method chaining
      */
-    MutableRecordSetMutator<T, M> add(M recordMutator);
+    NestedSetMutator<T, M> add(Function<M, M> mutateFunction);
 
     /**
      * Mutates a specific item in the set using the provided mutator function.
@@ -50,7 +50,7 @@ public interface MutableRecordSetMutator<T, M extends RecordMutator<T>> extends 
      * @param mutateFunction the function that takes a mutator for the item and returns a mutated version
      * @return a new mutator instance with the item mutated according to the provided function
      */
-    MutableRecordSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction);
+    NestedSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction);
 
     /**
      * Mutates all records in the set using the provided function.
@@ -59,7 +59,7 @@ public interface MutableRecordSetMutator<T, M extends RecordMutator<T>> extends 
      * @param mutateFunction the function to apply to each record
      * @return a new mutator instance with all records mutated according to the provided function
      */
-    MutableRecordSetMutator<T, M> mutateAll(Function<M, M> mutateFunction);
+    NestedSetMutator<T, M> mutateAll(Function<M, M> mutateFunction);
 
     /**
      * Finalizes the mutable set and returns an immutable copy.

@@ -12,7 +12,7 @@ class SetMutatorImplTest {
             this(false);
         }
     }
-    static class TestRecordMutator implements RecordMutator<TestRecord> {
+    static class TestRecordMutator implements Mutator<TestRecord> {
         boolean test;
         
         public TestRecordMutator(TestRecord testRecord) {
@@ -32,7 +32,7 @@ class SetMutatorImplTest {
         }
     }
     record StringRecord(String value) {}
-    static class StringRecordMutator implements RecordMutator<StringRecord> {
+    static class StringRecordMutator implements Mutator<StringRecord> {
         String value;
 
         public StringRecordMutator(StringRecord stringRecord) {
@@ -215,7 +215,7 @@ class SetMutatorImplTest {
         var mutator = new SetMutatorImpl<>(Set.copyOf(originalList), StringRecordMutator::new);
 
         // Act
-        mutator.add(new StringRecordMutator(new StringRecord("banana")));
+        mutator.add(m -> m.setValue("banana"));
         Set<StringRecord> newSet = mutator.build();
 
         // Assert

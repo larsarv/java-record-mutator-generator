@@ -39,20 +39,9 @@ import java.util.function.Function;
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
     private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
-    private static final ClassName FUNCTION_CLASSNAME = ClassName.get(Function.class);
-
-    private static final ClassName SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleListMutateFunction.class);
-    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordListMutateFunction.class);
-    private static final ClassName MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME = ClassName.get(ListMutatorImpl.class);
-
-
-    private static final ClassName SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(SimpleSetMutateFunction.class);
-    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_FUNCTION_CLASS_NAME = ClassName.get(MutableRecordSetMutateFunction.class);
-    private static final ClassName MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME = ClassName.get(SetMutatorImpl.class);
 
     private TypeElement generateMutatorTypeElement;
-    private TypeElement listTypeElement;
-    private TypeElement setTypeElement;
+    private TypeInfoFactory mutatorTypeInfoFactory;
 
     /**
      * Constructor for the AnnotationProcessor.
@@ -69,8 +58,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         generateMutatorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_MUTATOR_CLASS_NAME);
-        listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
-        setTypeElement = processingEnv.getElementUtils().getTypeElement(Set.class.getCanonicalName());
+        mutatorTypeInfoFactory = new TypeInfoFactory(processingEnv);
     }
 
     @Override
@@ -109,14 +97,6 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static String toFiledName(String componentName) {
-        return componentName.substring(0, 1).toLowerCase(Locale.ROOT) + componentName.substring(1);
-    }
-
-    private static String toMethodName(String prefix, String componentName) {
-        return prefix + componentName.substring(0, 1).toUpperCase(Locale.ROOT) + componentName.substring(1);
-    }
-
     private void processGenerateMutator(TypeElement recordElement) {
 
         PackageElement recordElementPackageElement = processingEnv.getElementUtils().getPackageOf(recordElement);
@@ -125,13 +105,12 @@ public class AnnotationProcessor extends AbstractProcessor {
         ClassName recordClassName = ClassName.get(recordElement);
 
         TypeSpec.Builder mutatorClassBuilder = TypeSpec.classBuilder(mutatorClassName)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(RecordMutator.class), recordClassName))
+                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Mutator.class), recordClassName))
                 .addModifiers(Modifier.PUBLIC);
 
 
         addConstructor(mutatorClassBuilder, recordElement, recordClassName);
-        addFieldsGettersAndSetters(mutatorClassBuilder, recordElement, mutatorClassName);
-        addMutateFunction(mutatorClassBuilder, recordElement, mutatorClassName);
+        addComponentMethods(mutatorClassBuilder, recordElement, mutatorClassName);
         addFactoryMethods(mutatorClassBuilder, mutatorClassName, recordClassName);
         addBuildMethod(recordElement, mutatorClassBuilder, recordClassName);
 
@@ -142,6 +121,15 @@ public class AnnotationProcessor extends AbstractProcessor {
             javaFile.writeTo(processingEnv.getFiler());
         } catch (IOException e) {
             printMessage(Diagnostic.Kind.ERROR, e.getMessage(), recordElement);
+        }
+    }
+
+    private void addComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, TypeName mutatorClassName) {
+        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
+            String componentName = recordComponentElement.getSimpleName().toString();
+
+            TypeInfo typeInfo = mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType());
+            typeInfo.contributeToMutator(mutatorClassBuilder, componentName, mutatorClassName);
         }
     }
 
@@ -212,222 +200,8 @@ public class AnnotationProcessor extends AbstractProcessor {
         return fieldList;
     }
 
-    private static void addFieldsGettersAndSetters(
-            TypeSpec.Builder mutatorClassBuilder,
-            TypeElement recordElement,
-            ClassName mutatorClassName
-    ) {
-        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
-            TypeName componentType = TypeName.get(recordComponentElement.asType());
-            String componentName = recordComponentElement.getSimpleName().toString();
-            String fieldName = toFiledName(componentName);
-            FieldSpec field = FieldSpec.builder(
-                    componentType,
-                    fieldName,
-                    Modifier.PRIVATE).build();
-
-            MethodSpec setterMethod = MethodSpec.methodBuilder(toMethodName("set", componentName))
-                    .addModifiers(Modifier.PUBLIC)
-                    .returns(mutatorClassName)
-                    .addParameter(componentType, "value")
-                    .addStatement("this.$N = value", fieldName)
-                    .addStatement("return this")
-                    .build();
-
-            MethodSpec getterMethod = MethodSpec.methodBuilder(toMethodName("get", componentName))
-                    .addModifiers(Modifier.PUBLIC)
-                    .returns(componentType)
-                    .addStatement("return $N", fieldName)
-                    .build();
-
-            mutatorClassBuilder
-                    .addField(field)
-                    .addMethod(setterMethod)
-                    .addMethod(getterMethod);
-
-        }
-    }
-
-    private void addMutateFunction(
-            TypeSpec.Builder mutatorClassBuilder,
-            TypeElement recordElement,
-            ClassName mutatorClassName
-    ) {
-        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
-            String componentName = recordComponentElement.getSimpleName().toString();
-            String fieldName = toFiledName(componentName);
-
-            TypeMirror recordComponentType = recordComponentElement.asType();
-            if (recordComponentType.getKind() == TypeKind.DECLARED) {
-                DeclaredType declaredType = (DeclaredType) recordComponentType;
-                Element typeElement = processingEnv.getTypeUtils().asElement(declaredType);
-                if (isRecordAnnotatedWithGenerateMutator(typeElement)) {
-                    // Component is a record annotated with GenerateMutator, add mutate function
-                    addMutateFunctionForRecordAnnotatedWithGenerateMutator(
-                            mutatorClassName,
-                            mutatorClassBuilder,
-                            typeElement,
-                            componentName,
-                            fieldName);
-                } else {
-                    if (isList(declaredType)) {
-                        if (hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(declaredType)) {
-                            // Component is a list of elements annotated with GenerateMutator, add modifier function
-                            addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
-                                    mutatorClassName,
-                                    mutatorClassBuilder,
-                                    declaredType,
-                                    componentName,
-                                    fieldName,
-                                    MUTABLE_RECORD_LIST_MUTATOR_FUNCTION_CLASS_NAME,
-                                    MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME);
-
-                        } else {
-                            // Simple list
-                            addMutatorForSimpleCollection(
-                                    mutatorClassName,
-                                    mutatorClassBuilder,
-                                    declaredType,
-                                    componentName,
-                                    fieldName,
-                                    SIMPLE_LIST_MUTATOR_FUNCTION_CLASS_NAME,
-                                    MUTABLE_RECORD_LIST_MUTATOR_IMPL_CLASSNAME);
-
-                        }
-                    } else if (isSet(declaredType)) {
-                        if (hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(declaredType)) {
-                            // Component is a set of elements annotated with GenerateMutator, add modifier function
-                            addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
-                                    mutatorClassName,
-                                    mutatorClassBuilder,
-                                    declaredType,
-                                    componentName,
-                                    fieldName,
-                                    MUTABLE_RECORD_SET_MUTATOR_FUNCTION_CLASS_NAME,
-                                    MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME);
-
-                        } else {
-                            // Simple set
-                            addMutatorForSimpleCollection(
-                                    mutatorClassName,
-                                    mutatorClassBuilder,
-                                    declaredType,
-                                    componentName,
-                                    fieldName,
-                                    SIMPLE_SET_MUTATOR_FUNCTION_CLASS_NAME,
-                                    MUTABLE_RECORD_SET_MUTATOR_IMPL_CLASSNAME);
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean hasRecordAnnotatedWithGenerateMutatorAsTypeArgument(DeclaredType declaredType) {
-        List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-        if (typeArguments.size() != 1) {
-            return false;
-        }
-        TypeMirror elementType = typeArguments.get(0);
-        Element element = processingEnv.getTypeUtils().asElement(elementType);
-        return isRecordAnnotatedWithGenerateMutator(element);
-    }
-
-    private boolean isList(DeclaredType declaredType) {
-        return processingEnv.getTypeUtils().isSameType(listTypeElement.asType(), declaredType.asElement().asType());
-    }
-    private boolean isSet(DeclaredType declaredType) {
-        return processingEnv.getTypeUtils().isSameType(setTypeElement.asType(), declaredType.asElement().asType());
-    }
-
-    private static boolean isRecordAnnotatedWithGenerateMutator(Element typeElement) {
-        return typeElement.getAnnotation(GenerateMutator.class) != null &&
-                typeElement.getKind() == ElementKind.RECORD;
-    }
-
-    private void addMutatorForSimpleCollection(
-            ClassName mutatorClassName,
-            TypeSpec.Builder mutatorClassBuilder,
-            DeclaredType declaredType,
-            String componentName,
-            String fieldName,
-            ClassName mutatorFunctionClassName,
-            ClassName mutatorimplClassName
-    ) {
-        TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
-        Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
-        String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
-        ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
-
-        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(mutatorClassName)
-                .addParameter(
-                        ParameterizedTypeName.get(
-                                mutatorFunctionClassName,
-                                typeName),
-                        "mutateFunction")
-                // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, null)).build()", fieldName, mutatorimplClassName, fieldName)
-                .addStatement("return this")
-                .build();
-
-        mutatorClassBuilder.addMethod(mutateMethod);
-    }
-
-    private void addMutateFunctionForCollectionOfRecordAnnotatedWithGenerateMutator(
-            ClassName mutatorClassName,
-            TypeSpec.Builder mutatorClassBuilder,
-            DeclaredType declaredType,
-            String componentName,
-            String fieldName,
-            ClassName mutatorFunctionClassName,
-            ClassName mutatorimplClassName
-    ) {
-        TypeName typeName = TypeName.get(declaredType.getTypeArguments().get(0));
-        Element listElementTypeElement = processingEnv.getTypeUtils().asElement(declaredType.getTypeArguments().get(0));
-        String listElementPackageName = processingEnv.getElementUtils().getPackageOf(listElementTypeElement).getQualifiedName().toString();
-        ClassName listElementMutatorClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName() + "Mutator");
-        ClassName listElementClassName = ClassName.get(listElementPackageName, listElementTypeElement.getSimpleName().toString());
-
-        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(mutatorClassName)
-                .addParameter(
-                        ParameterizedTypeName.get(
-                                mutatorFunctionClassName,
-                                typeName, listElementMutatorClassName),
-                        "mutateFunction")
-                // Function<InvoiceLineItem,InvoiceLineItemMutator>
-                .addStatement("$T<$T,$T> constructor = $T::mutator", FUNCTION_CLASSNAME, listElementClassName, listElementMutatorClassName, listElementMutatorClassName)
-                .addStatement("this.$N = mutateFunction.mutate(new $T<>(this.$N, constructor)).build()", fieldName, mutatorimplClassName, fieldName)
-                .addStatement("return this")
-                .build();
-
-        mutatorClassBuilder.addMethod(mutateMethod);
-    }
-
-    private void addMutateFunctionForRecordAnnotatedWithGenerateMutator(
-            ClassName mutatorClassName,
-            TypeSpec.Builder mutatorClassBuilder,
-            Element typeElement,
-            String componentName,
-            String fieldName
-    ) {
-        String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
-        ClassName recordComponentMutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
-
-        ParameterizedTypeName parameterType = ParameterizedTypeName.get(ClassName.get(Function.class), recordComponentMutatorClassName, recordComponentMutatorClassName);
-        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(mutatorClassName)
-                .addParameter(parameterType, "mutateFunction")
-                .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()", fieldName, recordComponentMutatorClassName, fieldName)
-                .addStatement("return this")
-                .build();
-
-        mutatorClassBuilder.addMethod(mutateMethod);
+    private static String toFiledName(String componentName) {
+        return componentName.substring(0, 1).toLowerCase(Locale.ROOT) + componentName.substring(1);
     }
 
     void printMessage(Diagnostic.Kind kind, String message) {

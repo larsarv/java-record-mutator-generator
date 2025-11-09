@@ -15,7 +15,7 @@ import java.util.function.Predicate;
  *
  * @param <T> the type of elements in the list
  */
-public interface SimpleListMutator<T> {
+public interface SimpleListMutator<T> extends Mutator<List<T>> {
     /**
      * Returns the number of elements in the list.
      *
@@ -46,15 +46,15 @@ public interface SimpleListMutator<T> {
     SimpleListMutator<T> set(int index, T record);
 
     /**
-     * Adds the specified record to the end of the list.
+     * Adds the specified item to add the end of the list.
      * <p>
      * This operation modifies the list in place and returns a reference to this mutator
      * for method chaining.
      *
-     * @param record the record to add to the list
+     * @param item the item to add to the list
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> add(T record);
+    SimpleListMutator<T> add(T item);
 
     /**
      * Removes the element at the specified index from the list.
@@ -133,6 +133,7 @@ public interface SimpleListMutator<T> {
      *
      * @return an immutable list containing the current elements
      */
+    @Override
     List<T> build();
 
     /**

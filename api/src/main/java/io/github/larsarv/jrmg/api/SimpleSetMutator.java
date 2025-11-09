@@ -16,7 +16,7 @@ import java.util.function.Predicate;
  *
  * @param <T> the type of elements in the set
  */
-public interface SimpleSetMutator<T> {
+public interface SimpleSetMutator<T> extends Mutator<Set<T>> {
     /**
      * Returns the number of elements in the set.
      *
@@ -110,6 +110,7 @@ public interface SimpleSetMutator<T> {
      *
      * @return an immutable set containing the current elements
      */
+    @Override
     Set<T> build();
 
     /**

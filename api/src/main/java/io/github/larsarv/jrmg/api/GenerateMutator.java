@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * capable of modifying its record components.
  * <p>
  * When applied to a record class, this annotation triggers the generation of
- * a mutator implementation that conforms to the {@link RecordMutator}
+ * a mutator implementation that conforms to the {@link Mutator}
  * interface, enabling fluent, side-effect-free modification of record instances.
  * <p>
  * The generated mutator will support operations such as getting, setting and mutation of the record components.
