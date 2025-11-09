@@ -8,6 +8,8 @@ Records in Java are immutable by default, which makes modifying them cumbersome 
 structures or complex business logic. JRMG solves this problem by generating a mutator class for each annotated record, 
 allowing developers to modify nested records in a fluent, builder-like manner.
 
+See [`OVERVIE.md`](OVERVIEW.md) for an overview of the project structure.
+
 ## Key Features
 - Fluent API: Generated mutators provide a chainable, readable API for modifying record components.
 - Immutable Output: All mutations result in a new immutable record instance.
