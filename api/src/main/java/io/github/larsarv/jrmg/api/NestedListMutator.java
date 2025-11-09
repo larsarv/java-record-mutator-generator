@@ -11,7 +11,7 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable list of the modified records.
  *
- * @param <T> the type the list element. Should be a record annotated with {@link GenerateMutator}.
+ * @param <T> the type the list element.
  * @param <M> the type of record mutator used to modify the record
  */
 public interface NestedListMutator<T, M extends Mutator<T>> extends SimpleListMutator<T> {

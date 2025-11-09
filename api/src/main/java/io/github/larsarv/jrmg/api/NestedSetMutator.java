@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable set of the modified records.
  *
- * @param <T> the type the set element. Should be a record annotated with {@link GenerateMutator}.
+ * @param <T> the type the set element.
  * @param <M> the type of record mutator used to modify the record
  */
 public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMutator<T> {

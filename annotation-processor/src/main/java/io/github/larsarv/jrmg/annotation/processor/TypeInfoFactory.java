@@ -13,12 +13,13 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Factory class for creating TypeInfo instances based on a type.
  * It determines the appropriate TypeInfo implementation to use based on whether the component
- * is a primitive, a record annotated with GenerateMutator, a List, or a Set.
+ * is a primitive, a record annotated with GenerateMutator, a List, a Set, or a Map.
  */
 public class TypeInfoFactory {
     private static final ClassName CLASS_NAME_LIST_MUTATOR_IMPL = ClassName.get(ListMutatorImpl.class);
@@ -33,10 +34,21 @@ public class TypeInfoFactory {
     private static final ClassName CLASS_NAME_NESTED_SET_MUTATE_FUNCTION = ClassName.get(NestedSetMutateFunction.class);
     private static final ClassName CLASS_NAME_SIMPLE_SET_MUTATE_FUNCTION = ClassName.get(SimpleSetMutateFunction.class);
 
+    private static final ClassName CLASS_NAME_MAP_MUTATOR_IMPL = ClassName.get(MapMutatorImpl.class);
+    private static final ClassName CLASS_NAME_NESTED_KEY_VALUE_MAP_MUTATOR = ClassName.get(NestedKeyValueMapMutator.class);
+    private static final ClassName CLASS_NAME_NESTED_KEY_MAP_MUTATOR = ClassName.get(NestedKeyMapMutator.class);
+    private static final ClassName CLASS_NAME_NESTED_VALUE_MAP_MUTATOR = ClassName.get(NestedValueMapMutator.class);
+    private static final ClassName CLASS_NAME_SIMPLE_MAP_MUTATOR = ClassName.get(SimpleMapMutator.class);
+    private static final ClassName CLASS_NAME_NESTED_MAP_KEY_VALUE_MUTATE_FUNCTION = ClassName.get(NestedMapKeyValueMutateFunction.class);
+    private static final ClassName CLASS_NAME_NESTED_MAP_KEY_MUTATE_FUNCTION = ClassName.get(NestedMapKeyMutateFunction.class);
+    private static final ClassName CLASS_NAME_NESTED_MAP_VALUE_MUTATE_FUNCTION = ClassName.get(NestedMapValueMutateFunction.class);
+    private static final ClassName CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION = ClassName.get(SimpleMapMutateFunction.class);
+
 
     private final ProcessingEnvironment processingEnv;
     private final TypeElement listTypeElement;
     private final TypeElement setTypeElement;
+    private final TypeElement mapTypeElement;
 
     /**
      * Creates a new TypeInfoFactory with the given processing environment.
@@ -47,6 +59,7 @@ public class TypeInfoFactory {
         this.processingEnv = processingEnv;
         this.listTypeElement = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
         this.setTypeElement = processingEnv.getElementUtils().getTypeElement(Set .class.getCanonicalName());
+        this.mapTypeElement = processingEnv.getElementUtils().getTypeElement(Map.class.getCanonicalName());
     }
 
     /**
@@ -56,6 +69,7 @@ public class TypeInfoFactory {
      * @return a TypeInfo instance representing the type, with appropriate mutator and collection handling
      */
     public TypeInfo createTypeInfo(TypeMirror type) {
+        TypeName typeName = TypeName.get(type);
         if (type.getKind() == TypeKind.DECLARED) {
             DeclaredType declaredType = (DeclaredType) type;
             Element typeElement = processingEnv.getTypeUtils().asElement(declaredType);
@@ -64,55 +78,128 @@ public class TypeInfoFactory {
                 String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
                 ClassName mutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
                 return new MutableRecordTypeInfo(
-                        TypeName.get(type),
+                        typeName,
                         mutatorClassName, // TODO Records with Generic arguments?
                         mutatorClassName);
             } else {
                 if (isList(declaredType)) {
-                    if (hasMutableAsTypeArgument(declaredType)) {
+                    TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
+                    if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
                         // Component is a list of mutable elements
-                        TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
                         return new CollectionTypeInfo(
-                                TypeName.get(type),
+                                typeName,
                                 elementTypeInfo,
                                 ParameterizedTypeName.get(CLASS_NAME_NESTED_LIST_MUTATOR, elementTypeInfo.getTypeName(), elementTypeInfo.getMutatorInterfaceTypeName()),
                                 CLASS_NAME_LIST_MUTATOR_IMPL,
                                 CLASS_NAME_NESTED_LIST_MUTATE_FUNCTION);
                     } else {
                         // Simple list
-                        TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
                         return new CollectionTypeInfo(
-                                TypeName.get(type),
+                                typeName,
                                 elementTypeInfo,
                                 ParameterizedTypeName.get(CLASS_NAME_SIMPLE_LIST_MUTATOR, elementTypeInfo.getTypeName()),
                                 CLASS_NAME_LIST_MUTATOR_IMPL,
                                 CLASS_NAME_SIMPLE_LIST_MUTATE_FUNCTION);
                     }
                 } else if (isSet(declaredType)) {
-                    if (hasMutableAsTypeArgument(declaredType)) {
+                    TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
+                    if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
                         // Component is a set of mutable elements
-                        TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
                         return new CollectionTypeInfo(
-                                TypeName.get(type),
+                                typeName,
                                 elementTypeInfo,
                                 ParameterizedTypeName.get(CLASS_NAME_NESTED_SET_MUTATOR, elementTypeInfo.getTypeName(), elementTypeInfo.getMutatorInterfaceTypeName()),
                                 CLASS_NAME_SET_MUTATOR_IMPL,
                                 CLASS_NAME_NESTED_SET_MUTATE_FUNCTION);
                     } else {
                         // Simple set
-                        TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
                         return new CollectionTypeInfo(
-                                TypeName.get(type),
+                                typeName,
                                 elementTypeInfo,
                                 ParameterizedTypeName.get(CLASS_NAME_SIMPLE_SET_MUTATOR, elementTypeInfo.getTypeName()),
                                 CLASS_NAME_SET_MUTATOR_IMPL,
                                 CLASS_NAME_SIMPLE_SET_MUTATE_FUNCTION);
                     }
+                } else if (isMap(declaredType)) {
+                    List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+                    if (typeArguments.size() == 2) {
+                        TypeInfo keyTypeInfo = createTypeInfo(typeArguments.get(0));
+                        TypeInfo valueTypeInfo = createTypeInfo(typeArguments.get(1));
+                        boolean hasKeyMutator = keyTypeInfo.getMutatorInterfaceTypeName() != null;
+                        boolean hasValueMutator = valueTypeInfo.getMutatorInterfaceTypeName() != null;
+                        
+                        if (hasKeyMutator && hasValueMutator) {
+                            // Map with mutable keys and values
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_KEY_VALUE_MAP_MUTATOR,
+                                        keyTypeInfo.getTypeName(),
+                                        valueTypeInfo.getTypeName(),
+                                        keyTypeInfo.getMutatorInterfaceTypeName(),
+                                        valueTypeInfo.getMutatorInterfaceTypeName()),
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    ParameterizedTypeName.get(
+                                            CLASS_NAME_NESTED_MAP_KEY_VALUE_MUTATE_FUNCTION,
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName(),
+                                            keyTypeInfo.getMutatorInterfaceTypeName(),
+                                            valueTypeInfo.getMutatorInterfaceTypeName()));
+                        } else if (hasKeyMutator) {
+                            // Map with mutable keys only
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_KEY_MAP_MUTATOR,
+                                        keyTypeInfo.getTypeName(),
+                                        valueTypeInfo.getTypeName(),
+                                        keyTypeInfo.getMutatorInterfaceTypeName()),
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    ParameterizedTypeName.get(
+                                            CLASS_NAME_NESTED_MAP_KEY_MUTATE_FUNCTION,
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName(),
+                                            keyTypeInfo.getMutatorInterfaceTypeName()));
+                        } else if (hasValueMutator) {
+                            // Map with mutable values only
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_VALUE_MAP_MUTATOR,
+                                        keyTypeInfo.getTypeName(),
+                                        valueTypeInfo.getTypeName(),
+                                        valueTypeInfo.getMutatorInterfaceTypeName()),
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    ParameterizedTypeName.get(
+                                            CLASS_NAME_NESTED_MAP_VALUE_MUTATE_FUNCTION,
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName(),
+                                            valueTypeInfo.getMutatorInterfaceTypeName()));
+                        } else {
+                            // Simple map
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    ParameterizedTypeName.get(CLASS_NAME_SIMPLE_MAP_MUTATOR,
+                                        keyTypeInfo.getTypeName(),
+                                        valueTypeInfo.getTypeName()),
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    ParameterizedTypeName.get(
+                                            CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION,
+                                            typeName,
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName()));
+                        }
+                    }
                 }
             }
         }
 
-        return new SimpleTypeInfo(TypeName.get(type));
+        return new SimpleTypeInfo(typeName);
     }
 
     private static boolean isRecordAnnotatedWithGenerateMutator(Element typeElement) {
@@ -125,23 +212,27 @@ public class TypeInfoFactory {
     private boolean isSet(DeclaredType declaredType) {
         return processingEnv.getTypeUtils().isSameType(setTypeElement.asType(), declaredType.asElement().asType());
     }
+    private boolean isMap(DeclaredType declaredType) {
+        return processingEnv.getTypeUtils().isSameType(mapTypeElement.asType(), declaredType.asElement().asType());
+    }
 
     private boolean hasMutableAsTypeArgument(DeclaredType declaredType) {
         List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-        if (typeArguments.size() != 1) {
-            return false;
-        }
-        TypeMirror elementType = typeArguments.get(0);
-        Element element = processingEnv.getTypeUtils().asElement(elementType);
-        if (isRecordAnnotatedWithGenerateMutator(element)) {
-            return true;
-        }
+        if (typeArguments.size() == 1) {
+            // For List and Set
+            TypeMirror elementType = typeArguments.get(0);
+            Element element = processingEnv.getTypeUtils().asElement(elementType);
+            if (isRecordAnnotatedWithGenerateMutator(element)) {
+                return true;
+            }
 
-        if (elementType.getKind() != TypeKind.DECLARED) {
-            return false;
+            if (elementType.getKind() != TypeKind.DECLARED) {
+                return false;
+            }
+            DeclaredType declaredElementType = (DeclaredType)elementType;
+            return isList(declaredElementType) || isSet(declaredElementType);
         }
-        DeclaredType declaredElementType = (DeclaredType)elementType;
-        return isList(declaredElementType) || isSet(declaredElementType);
+        return false;
     }
 
 }

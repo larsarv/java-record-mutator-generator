@@ -15,7 +15,7 @@ See [`OVERVIE.md`](OVERVIEW.md) for an overview of the project structure.
 - Immutable Output: All mutations result in a new immutable record instance.
 - Nested Record Support: Enabling deep mutation.
 - Can act as builders.
-- List and Set Support: Lists and Sets can be mutated using specialized mutator interfaces, 
+- List, Set, and Map Support: Lists, Sets, and Maps can be mutated using specialized mutator interfaces, 
   allowing you to mutate individual items or apply transformations to all items.
 - Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
 - Type Safety: Fully type-safe — all generated methods are strongly typed and checked at compile time.
@@ -24,7 +24,7 @@ See [`OVERVIE.md`](OVERVIEW.md) for an overview of the project structure.
 ## Use Cases
 - Domain Modeling: Modify complex domain records without writing manual builders.
 - Testing: Create test data with specific mutations for unit tests.
-- Data Transformation: Apply transformations to nested records or lists of records.
+- Data Transformation: Apply transformations to nested records.
 
 ## How It Works
 To use JRMG, simply annotate your record class with @GenerateMutator. The annotation processor will generate a mutator 
