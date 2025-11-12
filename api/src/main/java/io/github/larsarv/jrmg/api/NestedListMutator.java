@@ -71,6 +71,32 @@ public interface NestedListMutator<T, M extends Mutator<T>> extends SimpleListMu
     NestedListMutator<T, M> mutateAll(IndexedFunction<M> mutateFunction);
 
     /**
+     * Finds the first element matching the given predicate and apply a mutation on it.
+     * <p>
+     * This method allows for targeted mutation of a single element in the list based on a condition.
+     * The returned mutator instance can be used to apply transformations to the found element.
+     *
+     * @param predicate the predicate used to locate the first matching element to mutate
+     * @param mutateFunction the function used to mutate the found element
+     * @return this mutator instance for method chaining
+     */
+    NestedListMutator<T, M> findFirstAndMutate(Predicate<T> predicate, Function<M, M> mutateFunction);
+
+    /**
+     * Finds all elements matching the given predicate and applies a mutation on it.
+     * <p>
+     * This method allows for mutating multiple elements in the list based on a condition.
+     * The mutator function is applied to each matching element in the list.
+     * <p>
+     * The returned function can be invoked to apply the mutations.
+     *
+     * @param predicate the predicate used to locate all matching elements to mutate
+     * @param mutateFunction the function used to mutate each matching element
+     * @return this mutator instance for method chaining
+     */
+    NestedListMutator<T, M> findAllAndMutate(Predicate<T> predicate, Function<M, M> mutateFunction);
+
+    /**
      * Finalizes the mutable list and returns an immutable copy.
      * <p>
      * This method creates an immutable list from the current state of the mutator.
