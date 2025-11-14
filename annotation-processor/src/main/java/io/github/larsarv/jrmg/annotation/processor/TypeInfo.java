@@ -46,4 +46,23 @@ public interface TypeInfo {
      * @param i the index used for generating unique variable names
      */
     void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int i);
+
+    /**
+     * Contributes the necessary fields and methods to the constructor class and interface builders
+     * for this type of component. This method is responsible for defining the interfaces and implementation
+     * used for the all() function.
+     *
+     * @param constructorClassBuilder the builder for the constructor class
+     * @param constructorInterfaceBuilder the builder for the constructor interface
+     * @param mutatorClassName the TypeName of the mutator class associated with this component
+     * @param nextType the TypeName of the next component in the sequence
+     * @param componentName the name of the component being processed
+     */
+    void contributeToConstructor(
+            TypeSpec.Builder constructorClassBuilder,
+            TypeSpec.Builder constructorInterfaceBuilder,
+            TypeName mutatorClassName,
+            TypeName nextType,
+            String componentName);
+
 }

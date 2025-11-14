@@ -148,4 +148,19 @@ class MapComponentRecordTest {
         assertTrue(builtRecord.mapComponent().containsKey(new StringRecord("key2")));
         assertEquals(new StringRecord("value2"), builtRecord.mapComponent().get(new StringRecord("key2")));
     }
+
+    @Test
+    void setMapComponentShouldCreateNewMap() {
+        // Arrange
+        var mutator = MapComponentRecordMutator.mutator(TEST_RECORD);
+
+        // Act
+        MapComponentRecord builtRecord = mutator
+                .setMapComponent(map -> map)
+                .build();
+
+        // Assert
+        assertNotSame(TEST_MAP, builtRecord.mapComponent());
+    }
+
 }

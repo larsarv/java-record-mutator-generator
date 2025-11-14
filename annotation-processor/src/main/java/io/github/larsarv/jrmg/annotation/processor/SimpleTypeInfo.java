@@ -67,17 +67,43 @@ public class SimpleTypeInfo implements TypeInfo {
         codeBlockbuilder.add("null");
     }
 
+    @Override
+    public void contributeToConstructor(
+            TypeSpec.Builder constructorClassBuilder,
+            TypeSpec.Builder constructorInterfaceBuilder,
+            TypeName mutatorClassName,
+            TypeName nextType,
+            String componentName
+    ) {
+        String fieldName = toFiledName(componentName);
+
+        constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(nextType)
+                .addParameter(typeName, "value")
+                .addStatement("$T.this.$N = value", mutatorClassName, fieldName)
+                .addStatement("return this")
+                .build());
+
+        constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .returns(nextType)
+                .addParameter(typeName, "value")
+                .build());
+    }
+
     /**
      * Converts a component name into a method name by capitalizing the first letter
      * of the component name and prefixing it with the given prefix.
      *
-     * @param prefix the prefix to prepend to the method name
+     * @param prefix        the prefix to prepend to the method name
      * @param componentName the name of the component (e.g., "name", "age")
      * @return the generated method name (e.g., "setName", "setAge")
      */
     protected static String toMethodName(String prefix, String componentName) {
         return prefix + componentName.substring(0, 1).toUpperCase(Locale.ROOT) + componentName.substring(1);
     }
+
     /**
      * Converts a component name into a field name by converting the first character to lowercase
      * and keeping the rest unchanged.

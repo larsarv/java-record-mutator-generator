@@ -61,4 +61,18 @@ class AnnotatedRecordComponentRecordTest {
         assertTrue(builtRecord.component().booleanComponent());
     }
 
+    @Test
+    void componentSetterShouldReturnNewValue() {
+        // Arrange
+        var mutator = AnnotatedRecordComponentRecordMutator.mutator();
+        mutator.setComponent(COMPONENT_RECORD);
+        // Act
+        AnnotatedRecordComponentRecord builtRecord = mutator
+                .setComponent(component -> component)
+                .build();
+        // Assert
+        assertFalse(builtRecord.component().booleanComponent());
+        assertEquals(0, builtRecord.component().byteComponent());
+    }
+
 }

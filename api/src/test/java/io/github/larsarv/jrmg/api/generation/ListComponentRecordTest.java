@@ -34,7 +34,7 @@ class ListComponentRecordTest {
     @Test
     void listComponentShouldGetNewValue() {
         // Arrange
-        var mutator = ListComponentRecordMutator.mutator();
+        var mutator = ListComponentRecordMutator.mutator(TEST_RECORD);
         List<Object> value = new ArrayList<>();
         // Act
         ListComponentRecord builtRecord = mutator
@@ -42,6 +42,19 @@ class ListComponentRecordTest {
                 .build();
         // Assert
         assertSame(value, builtRecord.listComponent());
+    }
+
+    @Test
+    void listComponentShouldGetNewValueThroughFunction() {
+        // Arrange
+        var mutator = ListComponentRecordMutator.mutator();
+        List<Object> value = new ArrayList<>();
+        // Act
+        ListComponentRecord builtRecord = mutator
+                .setListComponent(list -> list)
+                .build();
+        // Assert
+        assertEquals(0, builtRecord.listComponent().size());
     }
 
     @Test

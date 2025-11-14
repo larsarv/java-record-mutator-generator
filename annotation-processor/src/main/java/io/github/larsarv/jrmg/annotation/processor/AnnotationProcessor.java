@@ -12,10 +12,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -124,13 +121,67 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private void addComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, TypeName mutatorClassName) {
+    private void addComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, ClassName mutatorClassName) {
+
         for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
             String componentName = recordComponentElement.getSimpleName().toString();
 
             TypeInfo typeInfo = mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType());
             typeInfo.contributeToMutator(mutatorClassBuilder, componentName, mutatorClassName);
         }
+
+        TypeSpec.Builder constructorClassBuilder = TypeSpec.classBuilder("Constructor");
+        List<RecordComponentElement> reverseComponentList = new ArrayList<>(recordElement.getRecordComponents());
+        Collections.reverse(reverseComponentList);
+        TypeName recordTypeName = TypeName.get(recordElement.asType());
+        TypeName nextType = ParameterizedTypeName.get(
+                ClassName.get(MutatorConstructor.class),
+                recordTypeName,
+                mutatorClassName);
+        constructorClassBuilder.addSuperinterface(nextType);
+        constructorClassBuilder.addMethod(MethodSpec.methodBuilder("done")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(mutatorClassName)
+                .addStatement("return $T.this", mutatorClassName)
+                .build());
+        constructorClassBuilder.addMethod(MethodSpec.methodBuilder("buildRecord")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(recordTypeName)
+                .addStatement("return $T.this.build()", mutatorClassName)
+                .build());
+
+        for (RecordComponentElement recordComponentElement : reverseComponentList) {
+            String componentName = recordComponentElement.getSimpleName().toString();
+            TypeInfo typeInfo = mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType());
+
+            TypeSpec.Builder constructorInterfaceBuilder = TypeSpec.interfaceBuilder(toConstructorInterfaceName(componentName));
+            constructorInterfaceBuilder.addModifiers(Modifier.PUBLIC);
+            typeInfo.contributeToConstructor(
+                    constructorClassBuilder,
+                    constructorInterfaceBuilder,
+                    mutatorClassName,
+                    nextType,
+                    componentName);
+            TypeSpec setterInterface = constructorInterfaceBuilder.build();
+
+            nextType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), setterInterface.name());
+            constructorClassBuilder.addSuperinterface(nextType);
+            mutatorClassBuilder.addType(setterInterface);
+        }
+
+
+        mutatorClassBuilder.addType(constructorClassBuilder.build());
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("all")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(nextType)
+                .addStatement("return new Constructor()")
+                .build());
+    }
+
+    private String toConstructorInterfaceName(String componentName) {
+        return componentName.substring(0, 1).toUpperCase(Locale.ROOT)
+                + componentName.substring(1)
+                + "ConstructorSetter";
     }
 
     private static void addBuildMethod(

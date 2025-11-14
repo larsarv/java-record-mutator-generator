@@ -76,5 +76,4 @@ class AnnotatedRecordListComponentRecordTest {
         // Assert
         assertTrue(builtRecord.listComponent().get(1).booleanComponent());
     }
-
 }

@@ -17,8 +17,8 @@ public class MutableRecordTypeInfo extends SimpleTypeInfo implements TypeInfo {
     /**
      * Constructs a MutableRecordTypeInfo with the given type name and mutator information.
      *
-     * @param typeName the TypeName of the record component
-     * @param recordMutatorTypeName the TypeName of the mutator interface for this record
+     * @param typeName               the TypeName of the record component
+     * @param recordMutatorTypeName  the TypeName of the mutator interface for this record
      * @param recordMutatorClassName the ClassName of the mutator implementation for this record
      */
     public MutableRecordTypeInfo(TypeName typeName, TypeName recordMutatorTypeName, ClassName recordMutatorClassName) {
@@ -37,7 +37,7 @@ public class MutableRecordTypeInfo extends SimpleTypeInfo implements TypeInfo {
         super.contributeToMutator(mutatorClassBuilder, componentName, recordMutatorInterfaceTypeName);
 
         String fieldName = toFiledName(componentName);
-        MethodSpec mutateMethod = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("mutate", componentName))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(recordMutatorInterfaceTypeName)
                 .addParameter(
@@ -46,15 +46,73 @@ public class MutableRecordTypeInfo extends SimpleTypeInfo implements TypeInfo {
                                 recordMutatorTypeName,
                                 recordMutatorTypeName),
                         "mutateFunction")
-                .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()", fieldName, recordMutatorClassName, fieldName)
+                .addStatement("this.$N = mutateFunction.apply($T.mutator(this.$N)).build()",
+                        fieldName,
+                        recordMutatorClassName,
+                        fieldName)
                 .addStatement("return this")
-                .build();
+                .build());
 
-        mutatorClassBuilder.addMethod(mutateMethod);
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(recordMutatorInterfaceTypeName)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(Function.class),
+                                recordMutatorTypeName,
+                                recordMutatorTypeName),
+                        "mutatorFunction")
+                .addStatement("this.$N = mutatorFunction.apply($T.mutator(null)).build()",
+                        fieldName,
+                        recordMutatorClassName)
+                .addStatement("return this")
+                .build());
     }
 
     @Override
     public void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
         codeBlockbuilder.add("\nrecord$L -> $T.mutator(record$L)", factoryMethodIndex, recordMutatorClassName, factoryMethodIndex);
     }
+
+    @Override
+    public void contributeToConstructor(
+            TypeSpec.Builder constructorClassBuilder,
+            TypeSpec.Builder constructorInterfaceBuilder,
+            TypeName mutatorClassName,
+            TypeName nextType,
+            String componentName
+    ) {
+        super.contributeToConstructor(constructorClassBuilder, constructorInterfaceBuilder, mutatorClassName, nextType,
+                componentName);
+
+        String fieldName = toFiledName(componentName);
+        constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(nextType)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(Function.class),
+                                recordMutatorTypeName,
+                                recordMutatorTypeName),
+                        "mutatorFunction")
+                .addStatement("$T.this.$N = mutatorFunction.apply($T.mutator(null)).build()",
+                        mutatorClassName,
+                        fieldName,
+                        recordMutatorClassName)
+                .addStatement("return this")
+                .build());
+
+
+        constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .returns(nextType)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(Function.class),
+                                recordMutatorTypeName,
+                                recordMutatorTypeName),
+                        "mutatorFunction")
+                .build());
+    }
+
 }

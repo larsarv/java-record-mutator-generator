@@ -14,7 +14,8 @@ See [`OVERVIE.md`](OVERVIEW.md) for an overview of the project structure.
 - Fluent API: Generated mutators provide a chainable, readable API for modifying record components.
 - Immutable Output: All mutations result in a new immutable record instance.
 - Nested Record Support: Enabling deep mutation.
-- Can act as builders.
+- Can act as builders. Can guarantee at compile time that all setters for the record components are called 
+  in order of declaration. 
 - List, Set, and Map Support: Lists, Sets, and Maps can be mutated using specialized mutator interfaces, 
   allowing you to mutate individual items or apply transformations to all items.
 - Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
@@ -47,7 +48,7 @@ public record Shipment(
 ```
 This generates `ShipmentMutator`.
 
-Example of usage of mutators below.
+Below is an example of using mutators to update nested values.
 ```
 public Shipment updateParcelStatus(Shipment shipment, String parcelNo, ParcelStatus parcelStatus) {
     return ShipmentMutator.mutator(shipment)
@@ -65,74 +66,82 @@ public Shipment updateShipmentWithNewParcel(Shipment originalShipment, Parcel pa
                             .build()))
             .build();
 }
-
+```
+Below is an example of using mutators as builder. Note the use off the `all()` function to give compile time error if not all 
+component of the record is set in the order of declaration.
+```
 public Shipment createShipmentTestData() {
-    return ShipmentMutator.mutator()
+    return ShipmentMutator.mutator().all()
             .setShipmentNo("SHP001")
             .setStatus(ShipmentStatus.CREATED)
-            .mutateParties(parties -> parties
-                    .put(PartyType.SENDER, party -> party
+            .setParties(parties -> parties
+                    .put(PartyType.SENDER, party -> party.all()
                             .setName("Acme Corp")
-                            .mutateAddress(address -> address
+                            .setAddress(address -> address.all()
                                     .setAddress1("123 Main St")
+                                    .setAddress2(null)
                                     .setCity("Anytown")
                                     .setState("ST")
                                     .setPostalCode("12345")
-                                    .setCountry("US"))
-                            .mutateContactInfo(contactInfos -> contactInfos
-                                    .add(contactInfo -> contactInfo
+                                    .setCountry("US")
+                                    .done())
+                            .setContactInfo(contactInfos -> contactInfos
+                                    .add(contactInfo -> contactInfo.all()
                                             .setType(ContactInfoType.EMAIL)
-                                            .setValue("contact@acme.com"))
-                                    .add(contactInfo -> contactInfo
+                                            .setValue("contact@acme.com")
+                                            .done())
+                                    .add(contactInfo -> contactInfo.all()
                                             .setType(ContactInfoType.PHONE)
-                                            .setValue("555-1234"))))
-                    .put(PartyType.RECEIVER, party -> party
+                                            .setValue("555-1234")
+                                            .done()))
+                            .done()) // Remove done?
+                    .put(PartyType.RECEIVER, party -> party.all()
                             .setName("John Doe")
-                            .mutateAddress(address -> address
+                            .setAddress(address -> address.all()
                                     .setAddress1("456 Oak Ave")
+                                    .setAddress2(null)
                                     .setCity("Somewhere")
                                     .setState("CA")
                                     .setPostalCode("67890")
-                                    .setCountry("US"))
-                            .mutateContactInfo(contactInfos -> contactInfos
+                                    .setCountry("US")
+                                    .done())
+                            .setContactInfo(contactInfos -> contactInfos
                                     .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.EMAIL)
                                             .setValue("john.doe@example.com"))
                                     .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.PHONE)
-                                            .setValue("555-5678")))))
-            .mutateParcels(parcels -> parcels
-                    .add(parcel -> parcel
+                                            .setValue("555-5678")))
+                            .done()))
+            .setParcels(parcels -> parcels
+                    .add(parcel -> parcel.all()
                             .setParcelNo("PARCEL001")
                             .setWeight(new BigDecimal("2.5"))
                             .setLength(new BigDecimal("10.0"))
                             .setWidth(new BigDecimal("8.0"))
                             .setHeight(new BigDecimal("6.0"))
                             .setDescription("Sample Package")
+                            .setContents(List.of())
                             .setType(ParcelType.EXPRESS)
-                            .setStatus(ParcelStatus.CREATED)))
-            .mutateProformaInvoice(proformaInvoice -> proformaInvoice
+                            .setStatus(ParcelStatus.CREATED)
+                            .done()))
+            .setProformaInvoice(proformaInvoice -> proformaInvoice.all()
                     .setInvoiceNo("INV001")
                     .setDescription("Sample Invoice")
+                    .setLineItemPrices(prices -> prices)
+                    .setLineItemDescriptions(description -> description)
+                    .setQuantities(quantities -> quantities)
+                    .setTaxCodes(taxCodes -> taxCodes)
                     .setTotalAmount(new BigDecimal("100.00"))
-                    .setIssueDate(LocalDateTime.now()))
-            .mutateSpecialInstructions(specialInstructions -> specialInstructions
+                    .setIssueDate(LocalDateTime.now())
+                    .setCustomFields(customFields -> customFields)
+                    .done())
+            .setSpecialInstructions(specialInstructions -> specialInstructions
                     .add("Handle with care")
                     .add("Fragile"))
             .setCreatedDate(LocalDateTime.now())
             .setEstimatedDeliveryDate(LocalDateTime.now().plusDays(5))
-            .build();
-}
-```
-## Gradle Setup
-```
-ext {
-    JRMG_VERSION = "1.0.0" // Use the latest version
-}
-
-dependencies {
-    implementation "io.github.larsarv.jrmg:api:$JRMG_VERSION"
-    annotationProcessor "io.github.larsarv.jrmg:annotation-processor:$JRMG_VERSION"
+            .done().build();
 }
 ```
 

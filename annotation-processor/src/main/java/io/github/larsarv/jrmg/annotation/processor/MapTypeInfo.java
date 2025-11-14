@@ -60,28 +60,50 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
 
         String fieldName = toFiledName(componentName);
 
-        CodeBlock.Builder codeBlockbuilder = CodeBlock.builder();
-        codeBlockbuilder.add(
+        CodeBlock.Builder mutatorCodeBlockbuilder = CodeBlock.builder();
+        mutatorCodeBlockbuilder.add(
                 "$T<$T,$T> factory = ",
                 FUNCTION_CLASS_NAME,
                 typeName,
                 mutatorInterfaceTypeName);
-        addMutatorFactoryCode(codeBlockbuilder, 0);
-        codeBlockbuilder
+        addMutatorFactoryCode(mutatorCodeBlockbuilder, 0);
+        mutatorCodeBlockbuilder
                 .add(";\n")
                 .addStatement("this.$N = mutateFunction.mutate(factory.apply(this.$N)).build()",
                         fieldName, fieldName)
                 .addStatement("return this");
 
-        MethodSpec.Builder mutateMethodBuilder = MethodSpec.methodBuilder(toMethodName("mutate", componentName))
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("mutate", componentName))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(recordMutatorInterfaceTypeName)
                 .addParameter(
                         mutatorFunctionTypeName,
                         "mutateFunction")
-                .addCode(codeBlockbuilder.build());
+                .addCode(mutatorCodeBlockbuilder.build())
+                .build());
 
-        mutatorClassBuilder.addMethod(mutateMethodBuilder.build());
+        CodeBlock.Builder setterCodeBlockbuilder = CodeBlock.builder();
+        setterCodeBlockbuilder.add(
+                "$T<$T,$T> factory = ",
+                FUNCTION_CLASS_NAME,
+                typeName,
+                mutatorInterfaceTypeName);
+        addMutatorFactoryCode(setterCodeBlockbuilder, 0);
+        setterCodeBlockbuilder
+                .add(";\n")
+                .addStatement("this.$N = mutateFunction.mutate(factory.apply(null)).build()",
+                        fieldName)
+                .addStatement("return this");
+
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(recordMutatorInterfaceTypeName)
+                .addParameter(
+                        mutatorFunctionTypeName,
+                        "mutateFunction")
+                .addCode(setterCodeBlockbuilder.build())
+                .build());
+
     }
 
     @Override
@@ -92,4 +114,50 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
         valueTypeInfo.addMutatorFactoryCode(codeBlockbuilder, factoryMethodIndex + 2);
         codeBlockbuilder.add(")");
     }
+
+    @Override
+    public void contributeToConstructor(
+            TypeSpec.Builder constructorClassBuilder,
+            TypeSpec.Builder constructorInterfaceBuilder,
+            TypeName mutatorClassName,
+            TypeName nextType,
+            String componentName
+    ) {
+        super.contributeToConstructor(constructorClassBuilder, constructorInterfaceBuilder, mutatorClassName, nextType,
+                componentName);
+
+        String fieldName = toFiledName(componentName);
+
+        CodeBlock.Builder codeBlockbuilder = CodeBlock.builder();
+        codeBlockbuilder.add(
+                "$T<$T,$T> factory = ",
+                FUNCTION_CLASS_NAME,
+                typeName,
+                mutatorInterfaceTypeName);
+        addMutatorFactoryCode(codeBlockbuilder, 0);
+        codeBlockbuilder
+                .add(";\n")
+                .addStatement("$T.this.$N = mutateFunction.mutate(factory.apply(null)).build()",
+                        mutatorClassName, fieldName)
+                .addStatement("return this");
+
+        constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(nextType)
+                .addParameter(
+                        mutatorFunctionTypeName,
+                        "mutateFunction")
+                .addCode(codeBlockbuilder.build())
+                .build());
+
+
+        constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .returns(nextType)
+                .addParameter(
+                        mutatorFunctionTypeName,
+                        "mutateFunction")
+                .build());
+    }
+
 }
