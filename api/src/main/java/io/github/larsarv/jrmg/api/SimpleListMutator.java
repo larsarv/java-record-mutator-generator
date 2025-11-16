@@ -94,7 +94,7 @@ public interface SimpleListMutator<T> extends Mutator<List<T>> {
      * @param indexedMutateFunction the function to apply to each element, accepting its index and the current element, returning the modified element
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> updateAll(IndexedFunction<T> indexedMutateFunction);
+    SimpleListMutator<T> updateAll(IndexedFunction<T, T> indexedMutateFunction);
 
     /**
      * Sorts the elements of the list in place according to the provided comparator.

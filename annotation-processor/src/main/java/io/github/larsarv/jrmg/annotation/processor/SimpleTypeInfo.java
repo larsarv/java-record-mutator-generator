@@ -35,7 +35,22 @@ public class SimpleTypeInfo implements TypeInfo {
     }
 
     @Override
-    public void contributeToMutator(TypeSpec.Builder mutatorClassBuilder, String componentName, TypeName recordMutatorInterfaceTypeName) {
+    public TypeName getFirstConstructorTypeName() {
+        return getMutatorInterfaceTypeName();
+    }
+
+    @Override
+    public TypeName getLastConstructorTypeName() {
+        return getMutatorInterfaceTypeName();
+    }
+
+    @Override
+    public void contributeToMutator(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeName mutatorClassName,
+            String componentName,
+            TypeName recordMutatorInterfaceTypeName
+    ) {
         String fieldName = toFiledName(componentName);
         FieldSpec field = FieldSpec.builder(
                 typeName,
@@ -64,6 +79,10 @@ public class SimpleTypeInfo implements TypeInfo {
 
     @Override
     public void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
+        codeBlockbuilder.add("null");
+    }
+    @Override
+    public void addConstructorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
         codeBlockbuilder.add("null");
     }
 

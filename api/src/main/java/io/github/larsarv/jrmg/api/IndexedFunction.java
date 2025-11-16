@@ -8,7 +8,7 @@ package io.github.larsarv.jrmg.api;
  * @param <T> the type of the item being processed
  */
 @FunctionalInterface
-public interface IndexedFunction<T> {
+public interface IndexedFunction<T, R> {
     /**
      * Applies a transformation to an item at the specified index.
      * The function should return the modified item, which may be the same as the original
@@ -18,5 +18,5 @@ public interface IndexedFunction<T> {
      * @param item the item to be transformed
      * @return the transformed item
      */
-    T apply(int index, T item);
+    R apply(int index, T item);
 }

@@ -17,17 +17,17 @@ import java.util.function.Predicate;
  * @param <T> the type the set element.
  * @param <M> the type of record mutator used to modify the record
  */
-public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMutator<T> {
+public interface NestedSetMutator<T, U, M extends Mutator<T>> extends SimpleSetMutator<T> {
     @Override
-    NestedSetMutator<T,M> add(T record);
+    NestedSetMutator<T, U, M> add(T record);
     @Override
-    NestedSetMutator<T,M> remove(T record);
+    NestedSetMutator<T, U, M> remove(T record);
     @Override
-    NestedSetMutator<T,M> filter(Predicate<T> filterFunction);
+    NestedSetMutator<T, U, M> filter(Predicate<T> filterFunction);
     @Override
-    NestedSetMutator<T,M> update(T item, SimpleFunction<T> mutateFunction);
+    NestedSetMutator<T, U, M> update(T item, SimpleFunction<T> mutateFunction);
     @Override
-    NestedSetMutator<T,M> updateAll(SimpleFunction<T> mutateFunction);
+    NestedSetMutator<T, U, M> updateAll(SimpleFunction<T> mutateFunction);
 
     /**
      * Adds a new element to the end of the set using the provided mutator function.
@@ -36,7 +36,7 @@ public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMuta
      * @param mutateFunction the mutator function used to create the element to be added
      * @return this mutator instance for method chaining
      */
-    NestedSetMutator<T, M> add(Function<M, M> mutateFunction);
+    NestedSetMutator<T, U, M> add(Function<U, M> mutateFunction);
 
     /**
      * Mutates a specific item in the set using the provided mutator function.
@@ -50,7 +50,7 @@ public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMuta
      * @param mutateFunction the function that takes a mutator for the item and returns a mutated version
      * @return a new mutator instance with the item mutated according to the provided function
      */
-    NestedSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction);
+    NestedSetMutator<T, U, M> mutate(T item, Function<U, M> mutateFunction);
 
     /**
      * Mutates all records in the set using the provided function.
@@ -59,7 +59,7 @@ public interface NestedSetMutator<T, M extends Mutator<T>> extends SimpleSetMuta
      * @param mutateFunction the function to apply to each record
      * @return a new mutator instance with all records mutated according to the provided function
      */
-    NestedSetMutator<T, M> mutateAll(Function<M, M> mutateFunction);
+    NestedSetMutator<T, U, M> mutateAll(Function<U, M> mutateFunction);
 
     /**
      * Finalizes the mutable set and returns an immutable copy.

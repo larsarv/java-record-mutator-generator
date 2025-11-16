@@ -28,25 +28,40 @@ public interface TypeInfo {
      */
     TypeName getMutatorInterfaceTypeName();
 
+    TypeName getFirstConstructorTypeName();
+    TypeName getLastConstructorTypeName();
     /**
-     * Contributes the necessary fields and methods to the mutator class builder
-     * for this specific type of component.
+     * Contributes the necessary code to the mutator class builder for this type.
+     * This method is responsible for adding fields, methods, or other constructs
+     * that enable mutation of the component represented by this type info.
      *
-     * @param mutatorClassBuilder the builder for the mutator class
-     * @param componentName the name of the component being processed
-     * @param recordMutatorInterfaceTypeName the type name of the record mutator interface
+     * @param mutatorClassBuilder the builder for the mutator class being generated
+     * @param mutatorClassName the fully qualified name of the mutator class
+     * @param componentName the name of the component being mutated
+     * @param recordMutatorInterfaceTypeName the TypeName of the record mutator interface
      */
-    void contributeToMutator(TypeSpec.Builder mutatorClassBuilder, String componentName, TypeName recordMutatorInterfaceTypeName);
+    void contributeToMutator(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeName mutatorClassName,
+            String componentName,
+            TypeName recordMutatorInterfaceTypeName);
 
     /**
      * Adds code to the mutator factory method for this type.
      * This is used when creating functions that can mutate the component.
      *
      * @param codeBlockbuilder the code block builder to append code to
-     * @param i the index used for generating unique variable names
+     * @param factoryMethodIndex the index used for generating unique variable names
      */
-    void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int i);
-
+    void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex);
+    /**
+     * Adds code to the constructor factory method for this type.
+     * This is used when creating functions that can construct the component.
+     *
+     * @param codeBlockbuilder the code block builder to append code to
+     * @param factoryMethodIndex the index used for generating unique variable names
+     */
+    void addConstructorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex);
     /**
      * Contributes the necessary fields and methods to the constructor class and interface builders
      * for this type of component. This method is responsible for defining the interfaces and implementation
@@ -54,7 +69,7 @@ public interface TypeInfo {
      *
      * @param constructorClassBuilder the builder for the constructor class
      * @param constructorInterfaceBuilder the builder for the constructor interface
-     * @param mutatorClassName the TypeName of the mutator class associated with this component
+     * @param mutatorClassName the fully qualified name of the mutator class
      * @param nextType the TypeName of the next component in the sequence
      * @param componentName the name of the component being processed
      */

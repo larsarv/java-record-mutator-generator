@@ -1,11 +1,8 @@
 package io.github.larsarv.jrmg.annotation.processor;
 
 import com.palantir.javapoet.*;
-import io.github.larsarv.jrmg.api.NestedKeyValueMapMutator;
 
 import javax.lang.model.element.Modifier;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -55,8 +52,13 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
     }
 
     @Override
-    public void contributeToMutator(TypeSpec.Builder mutatorClassBuilder, String componentName, TypeName recordMutatorInterfaceTypeName) {
-        super.contributeToMutator(mutatorClassBuilder, componentName, recordMutatorInterfaceTypeName);
+    public void contributeToMutator(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeName mutatorClassName,
+            String componentName,
+            TypeName recordMutatorInterfaceTypeName
+    ) {
+        super.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, recordMutatorInterfaceTypeName);
 
         String fieldName = toFiledName(componentName);
 

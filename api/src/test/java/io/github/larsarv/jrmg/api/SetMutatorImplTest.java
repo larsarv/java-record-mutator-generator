@@ -131,7 +131,7 @@ class SetMutatorImplTest {
     void shouldReturnImmutableSetCopyOnBuild() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord(true), new TestRecord(false));
-        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.build();
@@ -159,7 +159,7 @@ class SetMutatorImplTest {
     void shouldReturnImmutableSetCopyOnBuildCopy() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord(true), new TestRecord(false));
-        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.buildCopy();
@@ -185,7 +185,7 @@ class SetMutatorImplTest {
     @Test
     void shouldHandleNullSetInConstructor() {
         // Arrange
-        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(null, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new SetMutatorImpl<>(null, TestRecordMutator::new);
 
         // Act
         Set<TestRecord> builtSet = mutator.build();
@@ -198,7 +198,7 @@ class SetMutatorImplTest {
     void shouldAllowAddingNullElementToTheSet() {
         // Arrange
         Set<TestRecord> originalSet = Set.of(new TestRecord());
-        SetMutatorImpl<TestRecord, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
+        SetMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new SetMutatorImpl<>(originalSet, TestRecordMutator::new);
 
         // Act
         mutator.add((TestRecord) null);

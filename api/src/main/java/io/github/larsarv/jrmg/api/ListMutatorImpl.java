@@ -25,9 +25,9 @@ import java.util.function.Predicate;
  * @param <T> the type of elements stored in the list.
  * @param <M> the type of {@link Mutator} used to mutate the elements of type {@code T}
  */
-public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutator<T, M> {
+public class ListMutatorImpl<T, U, M extends Mutator<T>> implements NestedListMutator<T, U, M> {
     private final List<T> list;
-    private final Function<T, M> elementMutatorFactory;
+    private final Function<T, U> elementMutatorFactory;
     private boolean locked = false;
 
     /**
@@ -36,7 +36,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
      * @param list the initial list to be wrapped; if null, an empty list is created
      * @param elementMutatorFactory a function that generates a mutator for each element in the list
      */
-    public ListMutatorImpl(List<T> list, Function<T, M> elementMutatorFactory) {
+    public ListMutatorImpl(List<T> list, Function<T, U> elementMutatorFactory) {
         this.list = list == null ? new ArrayList<>(): new ArrayList<>(list);
         this.elementMutatorFactory = elementMutatorFactory;
     }
@@ -53,7 +53,10 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
      *                              null if the element data type is simple
      * @return a new list mutator instance that can be used to modify the list
      */
-    public static <T, E extends Mutator<T>> NestedListMutator<T, E> mutator(List<T> list, Function<T, E> elementMutatorFactory) {
+    public static <T, U, E extends Mutator<T>> NestedListMutator<T, U, E> mutator(
+            List<T> list,
+            Function<T, U> elementMutatorFactory
+    ) {
         return new ListMutatorImpl<>(list, elementMutatorFactory);
     }
 
@@ -68,7 +71,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> set(int index, T record) {
+    public NestedListMutator<T, U, M> set(int index, T record) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -77,7 +80,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> add(T item) {
+    public NestedListMutator<T, U, M> add(T item) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -86,7 +89,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> remove(int index) {
+    public NestedListMutator<T, U, M> remove(int index) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -95,7 +98,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> filter(Predicate<T> filterFunction) {
+    public NestedListMutator<T, U, M> filter(Predicate<T> filterFunction) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -104,7 +107,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> updateAll(IndexedFunction<T> mutateFunction) {
+    public NestedListMutator<T, U, M> updateAll(IndexedFunction<T, T> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -119,7 +122,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> sort(Comparator<? super T> comparator) {
+    public NestedListMutator<T, U, M> sort(Comparator<? super T> comparator) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -128,7 +131,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> move(int fromIndex, int toIndex) {
+    public NestedListMutator<T, U, M> move(int fromIndex, int toIndex) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -141,7 +144,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> set(int index, M recordMutator) {
+    public NestedListMutator<T, U, M> set(int index, M recordMutator) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -150,7 +153,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> add(Function<M, M> mutateFunction) {
+    public NestedListMutator<T, U, M> add(Function<U, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -159,7 +162,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> mutate(int index, Function<M, M> modifierFunction) {
+    public NestedListMutator<T, U, M> mutate(int index, Function<U, M> modifierFunction) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -170,7 +173,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> mutateAll(IndexedFunction<M> modifierFunction) {
+    public NestedListMutator<T, U, M> mutateAll(IndexedFunction<U, M> modifierFunction) {
         if (locked) {
             throw new IllegalStateException("List is locked and cannot be modified.");
         }
@@ -183,7 +186,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> findFirstAndMutate(Predicate<T> predicate, Function<M, M> mutatorFunction) {
+    public NestedListMutator<T, U, M> findFirstAndMutate(Predicate<T> predicate, Function<U, M> mutatorFunction) {
         for (int index = 0; index < list.size(); index++) {
             T orgValue = list.get(index);
             if (predicate.test(orgValue)) {
@@ -195,7 +198,7 @@ public class ListMutatorImpl<T, M extends Mutator<T>> implements NestedListMutat
     }
 
     @Override
-    public NestedListMutator<T, M> findAllAndMutate(Predicate<T> predicate, Function<M, M> mutatorFunction) {
+    public NestedListMutator<T, U, M> findAllAndMutate(Predicate<T> predicate, Function<U, M> mutatorFunction) {
         for (int index = 0; index < list.size(); index++) {
             T orgValue = list.get(index);
             if (predicate.test(orgValue)) {

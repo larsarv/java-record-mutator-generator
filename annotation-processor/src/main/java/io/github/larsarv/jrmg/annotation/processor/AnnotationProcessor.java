@@ -7,9 +7,6 @@ import io.github.larsarv.jrmg.api.*;
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.*;
@@ -108,7 +105,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         addConstructor(mutatorClassBuilder, recordElement, recordClassName);
         addComponentMethods(mutatorClassBuilder, recordElement, mutatorClassName);
-        addFactoryMethods(mutatorClassBuilder, mutatorClassName, recordClassName);
+        addFactoryMethods(mutatorClassBuilder, recordElement, mutatorClassName, recordClassName);
         addBuildMethod(recordElement, mutatorClassBuilder, recordClassName);
 
         JavaFile javaFile = JavaFile.builder(recordElementPackageName, mutatorClassBuilder.build())
@@ -121,34 +118,37 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
     }
 
+    private static String getFirstComponentName(TypeElement recordElement) {
+        if (recordElement.getRecordComponents().isEmpty()) {
+            return null;
+        }
+        return recordElement.getRecordComponents().get(0).getSimpleName().toString();
+    }
+
     private void addComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, ClassName mutatorClassName) {
 
         for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
             String componentName = recordComponentElement.getSimpleName().toString();
 
             TypeInfo typeInfo = mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType());
-            typeInfo.contributeToMutator(mutatorClassBuilder, componentName, mutatorClassName);
+            typeInfo.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, mutatorClassName);
         }
 
-        TypeSpec.Builder constructorClassBuilder = TypeSpec.classBuilder("Constructor");
+        TypeSpec.Builder constructorClassBuilder = TypeSpec.classBuilder("Constructor")
+                .addModifiers(Modifier.PRIVATE);
+
         List<RecordComponentElement> reverseComponentList = new ArrayList<>(recordElement.getRecordComponents());
         Collections.reverse(reverseComponentList);
         TypeName recordTypeName = TypeName.get(recordElement.asType());
-        TypeName nextType = ParameterizedTypeName.get(
-                ClassName.get(MutatorConstructor.class),
-                recordTypeName,
-                mutatorClassName);
-        constructorClassBuilder.addSuperinterface(nextType);
-        constructorClassBuilder.addMethod(MethodSpec.methodBuilder("done")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(mutatorClassName)
-                .addStatement("return $T.this", mutatorClassName)
-                .build());
-        constructorClassBuilder.addMethod(MethodSpec.methodBuilder("buildRecord")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordTypeName)
-                .addStatement("return $T.this.build()", mutatorClassName)
-                .build());
+        TypeName lastType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), "ConstructorDone");
+        TypeName prevType = lastType;
+        constructorClassBuilder
+                .superclass(prevType)
+                .addMethod(MethodSpec.methodBuilder("done")
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(mutatorClassName)
+                        .addStatement("return $T.this", mutatorClassName)
+                        .build());
 
         for (RecordComponentElement recordComponentElement : reverseComponentList) {
             String componentName = recordComponentElement.getSimpleName().toString();
@@ -160,21 +160,40 @@ public class AnnotationProcessor extends AbstractProcessor {
                     constructorClassBuilder,
                     constructorInterfaceBuilder,
                     mutatorClassName,
-                    nextType,
+                    prevType,
                     componentName);
             TypeSpec setterInterface = constructorInterfaceBuilder.build();
 
-            nextType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), setterInterface.name());
-            constructorClassBuilder.addSuperinterface(nextType);
+            prevType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), setterInterface.name());
+            constructorClassBuilder.addSuperinterface(prevType);
             mutatorClassBuilder.addType(setterInterface);
         }
 
-
-        mutatorClassBuilder.addType(constructorClassBuilder.build());
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("all")
+        mutatorClassBuilder.addType(TypeSpec.classBuilder("ConstructorDone")
                 .addModifiers(Modifier.PUBLIC)
-                .returns(nextType)
-                .addStatement("return new Constructor()")
+                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Mutator.class), recordTypeName))
+                .addMethod(MethodSpec.constructorBuilder()
+                        .addModifiers(Modifier.PRIVATE)
+                        .build())
+                .addMethod(MethodSpec.methodBuilder("build")
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(recordTypeName)
+                        .addStatement("return $T.this.build()", mutatorClassName)
+                        .build())
+                .build());
+        mutatorClassBuilder.addType(constructorClassBuilder.build());
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("construct")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(Function.class),
+                                prevType,
+                                lastType
+                        ),
+                        "constructorFunction")
+                .returns(mutatorClassName)
+                .addStatement("constructorFunction.apply(new Constructor())")
+                .addStatement("return $T.this", mutatorClassName)
                 .build());
     }
 
@@ -198,8 +217,9 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .build());
     }
 
-    private static void addFactoryMethods(
+    private void addFactoryMethods(
             TypeSpec.Builder mutatorClassBuilder,
+            TypeElement recordElement,
             ClassName mutatorClassName,
             ClassName recordClassName
     ) {
@@ -217,6 +237,28 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .returns(mutatorClassName)
                 .addStatement("return new $T(value)", mutatorClassName)
                 .build());
+
+        String firstComponentName = getFirstComponentName(recordElement);
+        if (firstComponentName != null) {
+            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("constructor")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(mutatorClassName.nestedClass(toConstructorInterfaceName(firstComponentName)))
+                    .addStatement("return new $T(null).crateConstructor()", mutatorClassName)
+                    .build());
+        } else {
+            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("constructor")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(mutatorClassName.nestedClass("ConstructorDone"))
+                    .addStatement("return new $T(null).crateConstructor()", mutatorClassName)
+                    .build());
+        }
+
+        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("crateConstructor")
+                .addModifiers(Modifier.PRIVATE)
+                .returns(mutatorClassName.nestedClass("Constructor"))
+                .addStatement("return new Constructor()")
+                .build());
+
     }
 
     private static void addConstructor(

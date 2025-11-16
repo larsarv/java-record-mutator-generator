@@ -22,9 +22,9 @@ import java.util.function.Predicate;
  * @param <T> the type of elements stored in the set.
  * @param <M> the type of {@link Mutator} used to mutate the elements of type {@code T}
  */
-public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator<T, M> {
+public class SetMutatorImpl<T, U, M extends Mutator<T>> implements NestedSetMutator<T, U, M> {
     private Set<T> set;
-    private final Function<T, M> elementMutatorFactory;
+    private final Function<T, U> elementMutatorFactory;
     private boolean locked = false;
 
     /**
@@ -33,7 +33,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
      * @param set the set to be copied into the internal mutable set; may be {@code null}
      * @param elementMutatorFactory a function that generates a mutator for each element in the set
      */
-    public SetMutatorImpl(Set<T> set, Function<T, M> elementMutatorFactory) {
+    public SetMutatorImpl(Set<T> set, Function<T, U> elementMutatorFactory) {
         this.set = set == null ? new HashSet<>() : new HashSet<>(set);
         this.elementMutatorFactory = elementMutatorFactory;
     }
@@ -50,7 +50,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
      *                              null if the element data type is simple
      * @return a new set mutator instance that can be used to modify the set
      */
-    public static <T, E extends Mutator<T>> NestedSetMutator<T, E> mutator(Set<T> set, Function<T, E> elementMutatorFactory) {
+    public static <T, U, E extends Mutator<T>> NestedSetMutator<T, U, E> mutator(Set<T> set, Function<T, U> elementMutatorFactory) {
         return new SetMutatorImpl<>(set, elementMutatorFactory);
     }
 
@@ -65,7 +65,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> add(T record) {
+    public NestedSetMutator<T, U, M> add(T record) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -74,7 +74,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> remove(T record) {
+    public NestedSetMutator<T, U, M> remove(T record) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -83,7 +83,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> filter(Predicate<T> filterFunction) {
+    public NestedSetMutator<T, U, M> filter(Predicate<T> filterFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -92,7 +92,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> update(T record, SimpleFunction<T> mutateFunction) {
+    public NestedSetMutator<T, U, M> update(T record, SimpleFunction<T> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -104,7 +104,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> updateAll(SimpleFunction<T> mutateFunction) {
+    public NestedSetMutator<T, U, M> updateAll(SimpleFunction<T> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -118,7 +118,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> add(Function<M, M> mutateFunction) {
+    public NestedSetMutator<T, U, M> add(Function<U, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -127,7 +127,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> mutate(T item, Function<M, M> mutateFunction) {
+    public NestedSetMutator<T, U, M> mutate(T item, Function<U, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }
@@ -139,7 +139,7 @@ public class SetMutatorImpl<T, M extends Mutator<T>> implements NestedSetMutator
     }
 
     @Override
-    public NestedSetMutator<T, M> mutateAll(Function<M, M> mutateFunction) {
+    public NestedSetMutator<T, U, M> mutateAll(Function<U, M> mutateFunction) {
         if (locked) {
             throw new IllegalStateException("Set is locked and cannot be modified.");
         }

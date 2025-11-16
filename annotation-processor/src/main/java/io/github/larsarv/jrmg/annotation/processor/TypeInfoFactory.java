@@ -77,10 +77,12 @@ public class TypeInfoFactory {
                 // Component is a record annotated with GenerateMutator, add mutate function
                 String recordComponentPackageName = processingEnv.getElementUtils().getPackageOf(typeElement).getQualifiedName().toString();
                 ClassName mutatorClassName = ClassName.get(recordComponentPackageName, typeElement.getSimpleName() + "Mutator");
+                String firstConponentName = getFirstRecordComponent(typeElement);
                 return new MutableRecordTypeInfo(
                         typeName,
                         mutatorClassName, // TODO Records with Generic arguments?
-                        mutatorClassName);
+                        mutatorClassName,
+                        firstConponentName);
             } else {
                 if (isList(declaredType)) {
                     TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
@@ -89,7 +91,7 @@ public class TypeInfoFactory {
                         return new CollectionTypeInfo(
                                 typeName,
                                 elementTypeInfo,
-                                ParameterizedTypeName.get(CLASS_NAME_NESTED_LIST_MUTATOR, elementTypeInfo.getTypeName(), elementTypeInfo.getMutatorInterfaceTypeName()),
+                                CLASS_NAME_NESTED_LIST_MUTATOR,
                                 CLASS_NAME_LIST_MUTATOR_IMPL,
                                 CLASS_NAME_NESTED_LIST_MUTATE_FUNCTION);
                     } else {
@@ -97,7 +99,7 @@ public class TypeInfoFactory {
                         return new CollectionTypeInfo(
                                 typeName,
                                 elementTypeInfo,
-                                ParameterizedTypeName.get(CLASS_NAME_SIMPLE_LIST_MUTATOR, elementTypeInfo.getTypeName()),
+                                CLASS_NAME_SIMPLE_LIST_MUTATOR,
                                 CLASS_NAME_LIST_MUTATOR_IMPL,
                                 CLASS_NAME_SIMPLE_LIST_MUTATE_FUNCTION);
                     }
@@ -108,7 +110,7 @@ public class TypeInfoFactory {
                         return new CollectionTypeInfo(
                                 typeName,
                                 elementTypeInfo,
-                                ParameterizedTypeName.get(CLASS_NAME_NESTED_SET_MUTATOR, elementTypeInfo.getTypeName(), elementTypeInfo.getMutatorInterfaceTypeName()),
+                                CLASS_NAME_NESTED_SET_MUTATOR,
                                 CLASS_NAME_SET_MUTATOR_IMPL,
                                 CLASS_NAME_NESTED_SET_MUTATE_FUNCTION);
                     } else {
@@ -116,7 +118,7 @@ public class TypeInfoFactory {
                         return new CollectionTypeInfo(
                                 typeName,
                                 elementTypeInfo,
-                                ParameterizedTypeName.get(CLASS_NAME_SIMPLE_SET_MUTATOR, elementTypeInfo.getTypeName()),
+                                CLASS_NAME_SIMPLE_SET_MUTATOR,
                                 CLASS_NAME_SET_MUTATOR_IMPL,
                                 CLASS_NAME_SIMPLE_SET_MUTATE_FUNCTION);
                     }
@@ -199,6 +201,16 @@ public class TypeInfoFactory {
         }
 
         return new SimpleTypeInfo(typeName);
+    }
+
+    private String getFirstRecordComponent(Element element) {
+        if (element.getKind() == ElementKind.RECORD) {
+            TypeElement typeElement = (TypeElement)element;
+            if (!typeElement.getRecordComponents().isEmpty()) {
+                return typeElement.getRecordComponents().get(0).getSimpleName().toString();
+            }
+        }
+        return null;
     }
 
     private static boolean isRecordAnnotatedWithGenerateMutator(Element typeElement) {

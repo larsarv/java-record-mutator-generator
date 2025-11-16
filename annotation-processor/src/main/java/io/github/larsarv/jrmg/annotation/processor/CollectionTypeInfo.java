@@ -15,42 +15,103 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     private final static ClassName FUNCTION_CLASS_NAME = ClassName.get(Function.class); // java.util.Function
 
     private final TypeInfo elementTypeInfo;
-    private final TypeName mutatorInterfaceTypeName; // Type of the mutator including generic parameters
+    private final ClassName mutatorInterfaceClassName;
     private final ClassName mutatorImplementationClassName; // Mutator implementation class
     private final ClassName mutatorFunctionClassName; // Function used by the mutate function as parameter
-
-
 
     /**
      * Constructs a CollectionTypeInfo with the given type information.
      *
      * @param typeName the TypeName of the collection component
      * @param elementTypeInfo the TypeInfo for the elements contained in the collection
-     * @param mutatorInterfaceTypeName the TypeName of the mutator interface for this collection
+     * @param mutatorInterfaceClassName the ClassName of the mutator interface for this collection
      * @param mutatorImplementationClassName the ClassName of the mutator implementation for this collection
      * @param mutatorFunctionClassName the ClassName of the function type used for mutation
      */
-    public CollectionTypeInfo(TypeName typeName, TypeInfo elementTypeInfo, TypeName mutatorInterfaceTypeName, ClassName mutatorImplementationClassName, ClassName mutatorFunctionClassName) {
+    public CollectionTypeInfo(
+            TypeName typeName,
+            TypeInfo elementTypeInfo,
+            ClassName mutatorInterfaceClassName,
+            ClassName mutatorImplementationClassName,
+            ClassName mutatorFunctionClassName
+    ) {
         super(typeName);
         this.elementTypeInfo = elementTypeInfo;
-        this.mutatorInterfaceTypeName = mutatorInterfaceTypeName;
+        this.mutatorInterfaceClassName = mutatorInterfaceClassName;
         this.mutatorImplementationClassName = mutatorImplementationClassName;
         this.mutatorFunctionClassName = mutatorFunctionClassName;
     }
 
     @Override
     public TypeName getMutatorInterfaceTypeName() {
-        return mutatorInterfaceTypeName;
+        if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    elementTypeInfo.getTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    elementTypeInfo.getTypeName(),
+                    elementTypeInfo.getMutatorInterfaceTypeName(),
+                    elementTypeInfo.getMutatorInterfaceTypeName());
+        }
     }
 
     @Override
-    public void contributeToMutator(TypeSpec.Builder mutatorClassBuilder, String componentName, TypeName recordMutatorInterfaceTypeName) {
-        super.contributeToMutator(mutatorClassBuilder, componentName, recordMutatorInterfaceTypeName);
+    public TypeName getFirstConstructorTypeName() {
+        // NestedSetMutator<StringRecord, StringRecordMutator.ValueConstructorSetter, StringRecordMutator.ConstructorDone>
+        if (elementTypeInfo.getFirstConstructorTypeName() == null) {
+            return null;
+        }
+        return ParameterizedTypeName.get(
+                mutatorInterfaceClassName,
+                elementTypeInfo.getTypeName(),
+                elementTypeInfo.getFirstConstructorTypeName(),
+                elementTypeInfo.getLastConstructorTypeName());
+
+        //return elementTypeInfo.getFirstConstructorTypeName();
+    }
+
+    @Override
+    public TypeName getLastConstructorTypeName() {
+        // NestedSetMutator<StringRecord, StringRecordMutator.ValueConstructorSetter, StringRecordMutator.ConstructorDone>
+        if (elementTypeInfo.getLastConstructorTypeName() == null) {
+            return null;
+        }
+        return ParameterizedTypeName.get(
+                mutatorInterfaceClassName,
+                elementTypeInfo.getTypeName(),
+                elementTypeInfo.getFirstConstructorTypeName(),
+                elementTypeInfo.getLastConstructorTypeName());
+    }
+
+    public TypeName getConstructorInterfaceTypeName() {
+        if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    elementTypeInfo.getTypeName(),
+                    elementTypeInfo.getFirstConstructorTypeName(),
+                    elementTypeInfo.getLastConstructorTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    elementTypeInfo.getTypeName());
+        }
+    }
+
+    @Override
+    public void contributeToMutator(
+            TypeSpec.Builder mutatorClassBuilder,
+            TypeName mutatorClassName,
+            String componentName,
+            TypeName recordMutatorInterfaceTypeName
+    ) {
+        super.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, recordMutatorInterfaceTypeName);
 
         String fieldName = toFiledName(componentName);
 
         CodeBlock.Builder mutatorCodeBlockbuilder = CodeBlock.builder();
-        mutatorCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, mutatorInterfaceTypeName);
+        mutatorCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
         addMutatorFactoryCode(mutatorCodeBlockbuilder, 0);
         mutatorCodeBlockbuilder
                 .add(";\n")
@@ -61,13 +122,13 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(recordMutatorInterfaceTypeName)
                 .addParameter(
-                        createParameterType(),
+                        createMutatorFunctionParameterType(),
                         "mutateFunction")
                 .addCode(mutatorCodeBlockbuilder.build())
                 .build());
 
         CodeBlock.Builder setterCodeBlockbuilder = CodeBlock.builder();
-        setterCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, mutatorInterfaceTypeName);
+        setterCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
         addMutatorFactoryCode(setterCodeBlockbuilder, 0);
         setterCodeBlockbuilder
                 .add(";\n")
@@ -79,13 +140,34 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(recordMutatorInterfaceTypeName)
                 .addParameter(
-                        createParameterType(),
+                        createMutatorFunctionParameterType(),
                         "mutateFunction")
                 .addCode(setterCodeBlockbuilder.build())
                 .build());
+
+        // ----------------
+        if (elementTypeInfo.getFirstConstructorTypeName() != null) {
+            CodeBlock.Builder allCodeBlockbuilder = CodeBlock.builder();
+            allCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getConstructorInterfaceTypeName());
+            addConstructorFactoryCode(allCodeBlockbuilder, 0);
+            allCodeBlockbuilder
+                    .add(";\n")
+                    .addStatement("this.$N = constructorFunction.mutate(factory.apply(this.$N)).build()", fieldName, fieldName)
+                    .addStatement("return this");
+
+            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("all", componentName))
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(recordMutatorInterfaceTypeName)
+                    .addParameter(
+                            createConstructorFunctionParameterType(),
+                            "constructorFunction")
+                    .addCode(allCodeBlockbuilder.build())
+                    .build());
+        }
+
     }
 
-    private ParameterizedTypeName createParameterType() {
+    private ParameterizedTypeName createMutatorFunctionParameterType() {
         if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,
@@ -94,7 +176,22 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,
                     elementTypeInfo.getTypeName(),
+                    elementTypeInfo.getMutatorInterfaceTypeName(),
                     elementTypeInfo.getMutatorInterfaceTypeName());
+        }
+    }
+
+    private ParameterizedTypeName createConstructorFunctionParameterType() {
+        if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    elementTypeInfo.getTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    elementTypeInfo.getTypeName(),
+                    elementTypeInfo.getFirstConstructorTypeName(),
+                    elementTypeInfo.getLastConstructorTypeName());
         }
     }
 
@@ -102,6 +199,12 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     public void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
         codeBlockbuilder.add("\nelement$L -> $T.mutator(element$L, ", factoryMethodIndex, mutatorImplementationClassName, factoryMethodIndex);
         elementTypeInfo.addMutatorFactoryCode(codeBlockbuilder, factoryMethodIndex + 1);
+        codeBlockbuilder.add(")");
+    }
+    @Override
+    public void addConstructorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
+        codeBlockbuilder.add("\nelement$L -> $T.mutator(element$L, ", factoryMethodIndex, mutatorImplementationClassName, factoryMethodIndex);
+        elementTypeInfo.addConstructorFactoryCode(codeBlockbuilder, factoryMethodIndex + 1);
         codeBlockbuilder.add(")");
     }
 
@@ -118,10 +221,10 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
 
         String fieldName = toFiledName(componentName);
 
-        CodeBlock.Builder codeBlockbuilder = CodeBlock.builder();
-        codeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, mutatorInterfaceTypeName);
-        addMutatorFactoryCode(codeBlockbuilder, 0);
-        codeBlockbuilder
+        CodeBlock.Builder setCodeBlockbuilder = CodeBlock.builder();
+        setCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
+        addMutatorFactoryCode(setCodeBlockbuilder, 0);
+        setCodeBlockbuilder
                 .add(";\n")
                 .addStatement("$T.this.$N = mutateFunction.mutate(factory.apply(null)).build()",
                         mutatorClassName,
@@ -132,19 +235,46 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(nextType)
                 .addParameter(
-                        createParameterType(),
+                        createMutatorFunctionParameterType(),
                         "mutateFunction")
-                .addCode(codeBlockbuilder.build())
+                .addCode(setCodeBlockbuilder.build())
                 .build());
-
-
         constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
                 .returns(nextType)
                 .addParameter(
-                        createParameterType(),
+                        createMutatorFunctionParameterType(),
                         "mutateFunction")
                 .build());
+
+        if (elementTypeInfo.getFirstConstructorTypeName() != null) {
+            CodeBlock.Builder constructCodeBlockbuilder = CodeBlock.builder();
+            constructCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getConstructorInterfaceTypeName());
+            addConstructorFactoryCode(constructCodeBlockbuilder, 0);
+            constructCodeBlockbuilder
+                    .add(";\n")
+                    .addStatement("$T.this.$N = constructFunction.mutate(factory.apply(null)).build()",
+                            mutatorClassName,
+                            fieldName)
+                    .addStatement("return this");
+
+            constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("construct", componentName))
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(nextType)
+                    .addParameter(
+                            createConstructorFunctionParameterType(),
+                            "constructFunction")
+                    .addCode(constructCodeBlockbuilder.build())
+                    .build());
+
+            constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("construct", componentName))
+                    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                    .returns(nextType)
+                    .addParameter(
+                            createConstructorFunctionParameterType(),
+                            "constructFunction")
+                    .build());
+        }
     }
 
 }
