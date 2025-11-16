@@ -103,69 +103,74 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     @Override
     public void contributeToMutator(
             TypeSpec.Builder mutatorClassBuilder,
-            TypeName mutatorClassName,
+            TypeName mutatorTypeName,
             String componentName,
             TypeName recordMutatorInterfaceTypeName
     ) {
-        super.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, recordMutatorInterfaceTypeName);
+        super.contributeToMutator(mutatorClassBuilder, mutatorTypeName, componentName, recordMutatorInterfaceTypeName);
 
         String fieldName = toFiledName(componentName);
 
-        CodeBlock.Builder mutatorCodeBlockbuilder = CodeBlock.builder();
-        mutatorCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
-        addMutatorFactoryCode(mutatorCodeBlockbuilder, 0);
-        mutatorCodeBlockbuilder
+        mutatorClassBuilder
+                .addMethod(createMutateMethod(mutatorTypeName,fieldName, componentName, recordMutatorInterfaceTypeName))
+                .addMethod(createSetMethod(mutatorTypeName, fieldName, componentName, recordMutatorInterfaceTypeName));
+
+        if (elementTypeInfo.getFirstConstructorTypeName() != null) { // TODO Replace with hasMutator() when map mutator is fixed
+            mutatorClassBuilder.addMethod(createConstructMethod(mutatorTypeName, fieldName, componentName, recordMutatorInterfaceTypeName));
+        }
+
+    }
+    private MethodSpec createMutateMethod(TypeName mutatorTypeName, String fieldName, String componentName, TypeName recordMutatorInterfaceTypeName) {
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+        codeBlock.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
+        addMutatorFactoryCode(codeBlock, 0);
+        codeBlock
                 .add(";\n")
-                .addStatement("this.$N = mutateFunction.mutate(factory.apply(this.$N)).build()", fieldName, fieldName)
+                .addStatement("$T.this.$N = function.mutate(factory.apply(this.$N)).build()", mutatorTypeName, fieldName, fieldName)
                 .addStatement("return this");
 
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordMutatorInterfaceTypeName)
-                .addParameter(
-                        createMutatorFunctionParameterType(),
-                        "mutateFunction")
-                .addCode(mutatorCodeBlockbuilder.build())
-                .build());
+        return createImplementationMethod(
+                "mutate",
+                createMutatorFunctionParameterType(),
+                codeBlock.build(),
+                componentName,
+                recordMutatorInterfaceTypeName);
+    }
 
-        CodeBlock.Builder setterCodeBlockbuilder = CodeBlock.builder();
-        setterCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
-        addMutatorFactoryCode(setterCodeBlockbuilder, 0);
-        setterCodeBlockbuilder
+    private MethodSpec createSetMethod(TypeName mutatorTypeName, String fieldName, String componentName, TypeName recordMutatorInterfaceTypeName) {
+        CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
+        codeBlockBuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
+        addMutatorFactoryCode(codeBlockBuilder, 0);
+        codeBlockBuilder
                 .add(";\n")
-                .addStatement("this.$N = mutateFunction.mutate(factory.apply(null)).build()",
+                .addStatement("$T.this.$N = function.mutate(factory.apply(null)).build()",
+                        mutatorTypeName,
                         fieldName)
                 .addStatement("return this");
 
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordMutatorInterfaceTypeName)
-                .addParameter(
-                        createMutatorFunctionParameterType(),
-                        "mutateFunction")
-                .addCode(setterCodeBlockbuilder.build())
-                .build());
+        return createImplementationMethod(
+                "set",
+                createMutatorFunctionParameterType(),
+                codeBlockBuilder.build(),
+                componentName,
+                recordMutatorInterfaceTypeName
+        );
+    }
+    private MethodSpec createConstructMethod(TypeName mutatorTypeName, String fieldName, String componentName, TypeName returnTypeName) {
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+        codeBlock.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getConstructorInterfaceTypeName());
+        addConstructorFactoryCode(codeBlock, 0);
+        codeBlock
+                .add(";\n")
+                .addStatement("$T.this.$N = function.mutate(factory.apply(null)).build()", mutatorTypeName, fieldName)
+                .addStatement("return this");
 
-        // ----------------
-        if (elementTypeInfo.getFirstConstructorTypeName() != null) {
-            CodeBlock.Builder allCodeBlockbuilder = CodeBlock.builder();
-            allCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getConstructorInterfaceTypeName());
-            addConstructorFactoryCode(allCodeBlockbuilder, 0);
-            allCodeBlockbuilder
-                    .add(";\n")
-                    .addStatement("this.$N = constructorFunction.mutate(factory.apply(this.$N)).build()", fieldName, fieldName)
-                    .addStatement("return this");
-
-            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("all", componentName))
-                    .addModifiers(Modifier.PUBLIC)
-                    .returns(recordMutatorInterfaceTypeName)
-                    .addParameter(
-                            createConstructorFunctionParameterType(),
-                            "constructorFunction")
-                    .addCode(allCodeBlockbuilder.build())
-                    .build());
-        }
-
+        return createImplementationMethod(
+                "construct",
+                createConstructorFunctionParameterType(),
+                codeBlock.build(),
+                componentName,
+                returnTypeName);
     }
 
     private ParameterizedTypeName createMutatorFunctionParameterType() {
@@ -213,69 +218,68 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     public void contributeToConstructor(
             TypeSpec.Builder constructorClassBuilder,
             TypeSpec.Builder constructorInterfaceBuilder,
-            TypeName mutatorClassName,
+            TypeName mutatorTypeName,
             TypeName nextType,
             String componentName
     ) {
-        super.contributeToConstructor(constructorClassBuilder, constructorInterfaceBuilder, mutatorClassName, nextType,
+        super.contributeToConstructor(constructorClassBuilder, constructorInterfaceBuilder, mutatorTypeName, nextType,
                 componentName);
 
         String fieldName = toFiledName(componentName);
 
-        CodeBlock.Builder setCodeBlockbuilder = CodeBlock.builder();
-        setCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getMutatorInterfaceTypeName());
-        addMutatorFactoryCode(setCodeBlockbuilder, 0);
-        setCodeBlockbuilder
-                .add(";\n")
-                .addStatement("$T.this.$N = mutateFunction.mutate(factory.apply(null)).build()",
-                        mutatorClassName,
-                        fieldName)
-                .addStatement("return this");
+        constructorClassBuilder
+                .addMethod(createSetMethod(mutatorTypeName, fieldName, componentName, nextType));
 
-        constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(nextType)
-                .addParameter(
-                        createMutatorFunctionParameterType(),
-                        "mutateFunction")
-                .addCode(setCodeBlockbuilder.build())
-                .build());
-        constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .returns(nextType)
-                .addParameter(
-                        createMutatorFunctionParameterType(),
-                        "mutateFunction")
-                .build());
+        constructorInterfaceBuilder.addMethod(createInterfaceMethod(
+                "set",
+                createMutatorFunctionParameterType(),
+                componentName,
+                nextType
+        ));
 
-        if (elementTypeInfo.getFirstConstructorTypeName() != null) {
-            CodeBlock.Builder constructCodeBlockbuilder = CodeBlock.builder();
-            constructCodeBlockbuilder.add("$T<$T,$T> factory = ", FUNCTION_CLASS_NAME, typeName, getConstructorInterfaceTypeName());
-            addConstructorFactoryCode(constructCodeBlockbuilder, 0);
-            constructCodeBlockbuilder
-                    .add(";\n")
-                    .addStatement("$T.this.$N = constructFunction.mutate(factory.apply(null)).build()",
-                            mutatorClassName,
-                            fieldName)
-                    .addStatement("return this");
-
-            constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("construct", componentName))
-                    .addModifiers(Modifier.PUBLIC)
-                    .returns(nextType)
-                    .addParameter(
-                            createConstructorFunctionParameterType(),
-                            "constructFunction")
-                    .addCode(constructCodeBlockbuilder.build())
-                    .build());
-
-            constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("construct", componentName))
-                    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                    .returns(nextType)
-                    .addParameter(
-                            createConstructorFunctionParameterType(),
-                            "constructFunction")
-                    .build());
+        if (elementTypeInfo.getFirstConstructorTypeName() != null) { // TODO Replace with hasMutator() when map mutator is fixed
+            constructorClassBuilder
+                    .addMethod(createConstructMethod(mutatorTypeName, fieldName, componentName, nextType));
+    
+            constructorInterfaceBuilder.addMethod(createInterfaceMethod(
+                    "construct",
+                    createConstructorFunctionParameterType(),
+                    componentName,
+                    nextType
+            ));
         }
+    }
+
+    private MethodSpec createImplementationMethod(
+            String methodNamePrefix,
+            TypeName parameterTypeName,
+            CodeBlock codeBlock,
+            String componentName,
+            TypeName returnTypeName
+    ) {
+        return MethodSpec.methodBuilder(toMethodName(methodNamePrefix, componentName))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(returnTypeName)
+                .addParameter(
+                        parameterTypeName,
+                        "function")
+                .addCode(codeBlock)
+                .build();
+    }
+
+    private MethodSpec createInterfaceMethod(
+            String methodNamePrefix,
+            TypeName parameterTypeName,
+            String componentName,
+            TypeName returnTypeName
+    ) {
+        return MethodSpec.methodBuilder(toMethodName(methodNamePrefix, componentName))
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .returns(returnTypeName)
+                .addParameter(
+                        parameterTypeName,
+                        "function")
+                .build();
     }
 
 }
