@@ -47,6 +47,11 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
     }
 
     @Override
+    public boolean hasMutator() {
+        return true;
+    }
+
+    @Override
     public TypeName getMutatorInterfaceTypeName() {
         return mutatorInterfaceTypeName;
     }

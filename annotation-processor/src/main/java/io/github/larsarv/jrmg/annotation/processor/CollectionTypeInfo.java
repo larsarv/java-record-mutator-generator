@@ -43,24 +43,28 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     }
 
     @Override
+    public boolean hasMutator() {
+        return true;
+    }
+
+    @Override
     public TypeName getMutatorInterfaceTypeName() {
-        if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
-            return ParameterizedTypeName.get(
-                    mutatorInterfaceClassName,
-                    elementTypeInfo.getTypeName());
-        } else {
+        if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorInterfaceClassName,
                     elementTypeInfo.getTypeName(),
                     elementTypeInfo.getMutatorInterfaceTypeName(),
                     elementTypeInfo.getMutatorInterfaceTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    elementTypeInfo.getTypeName());
         }
     }
 
     @Override
     public TypeName getFirstConstructorTypeName() {
-        // NestedSetMutator<StringRecord, StringRecordMutator.ValueConstructorSetter, StringRecordMutator.ConstructorDone>
-        if (elementTypeInfo.getFirstConstructorTypeName() == null) {
+        if (!elementTypeInfo.hasMutator()) {
             return null;
         }
         return ParameterizedTypeName.get(
@@ -68,14 +72,11 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 elementTypeInfo.getTypeName(),
                 elementTypeInfo.getFirstConstructorTypeName(),
                 elementTypeInfo.getLastConstructorTypeName());
-
-        //return elementTypeInfo.getFirstConstructorTypeName();
     }
 
     @Override
     public TypeName getLastConstructorTypeName() {
-        // NestedSetMutator<StringRecord, StringRecordMutator.ValueConstructorSetter, StringRecordMutator.ConstructorDone>
-        if (elementTypeInfo.getLastConstructorTypeName() == null) {
+        if (!elementTypeInfo.hasMutator()) {
             return null;
         }
         return ParameterizedTypeName.get(
@@ -86,7 +87,7 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     }
 
     public TypeName getConstructorInterfaceTypeName() {
-        if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
+        if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorInterfaceClassName,
                     elementTypeInfo.getTypeName(),
@@ -168,30 +169,30 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
     }
 
     private ParameterizedTypeName createMutatorFunctionParameterType() {
-        if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
-            return ParameterizedTypeName.get(
-                    mutatorFunctionClassName,
-                    elementTypeInfo.getTypeName());
-        } else {
+        if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,
                     elementTypeInfo.getTypeName(),
                     elementTypeInfo.getMutatorInterfaceTypeName(),
                     elementTypeInfo.getMutatorInterfaceTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    elementTypeInfo.getTypeName());
         }
     }
 
     private ParameterizedTypeName createConstructorFunctionParameterType() {
-        if (elementTypeInfo.getMutatorInterfaceTypeName() == null) {
-            return ParameterizedTypeName.get(
-                    mutatorFunctionClassName,
-                    elementTypeInfo.getTypeName());
-        } else {
+        if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,
                     elementTypeInfo.getTypeName(),
                     elementTypeInfo.getFirstConstructorTypeName(),
                     elementTypeInfo.getLastConstructorTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    elementTypeInfo.getTypeName());
         }
     }
 

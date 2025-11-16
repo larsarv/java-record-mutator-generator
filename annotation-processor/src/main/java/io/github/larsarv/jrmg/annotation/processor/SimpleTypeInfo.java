@@ -30,6 +30,11 @@ public class SimpleTypeInfo implements TypeInfo {
     }
 
     @Override
+    public boolean hasMutator() {
+        return false;
+    }
+
+    @Override
     public TypeName getMutatorInterfaceTypeName() {
         return null;
     }

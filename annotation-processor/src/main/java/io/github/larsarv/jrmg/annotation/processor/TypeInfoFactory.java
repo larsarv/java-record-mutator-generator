@@ -86,7 +86,7 @@ public class TypeInfoFactory {
             } else {
                 if (isList(declaredType)) {
                     TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
-                    if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
+                    if (elementTypeInfo.hasMutator()) {
                         // Component is a list of mutable elements
                         return new CollectionTypeInfo(
                                 typeName,
@@ -105,7 +105,7 @@ public class TypeInfoFactory {
                     }
                 } else if (isSet(declaredType)) {
                     TypeInfo elementTypeInfo = createTypeInfo(declaredType.getTypeArguments().get(0));
-                    if (elementTypeInfo.getMutatorInterfaceTypeName() != null) {
+                    if (elementTypeInfo.hasMutator()) {
                         // Component is a set of mutable elements
                         return new CollectionTypeInfo(
                                 typeName,
@@ -127,8 +127,8 @@ public class TypeInfoFactory {
                     if (typeArguments.size() == 2) {
                         TypeInfo keyTypeInfo = createTypeInfo(typeArguments.get(0));
                         TypeInfo valueTypeInfo = createTypeInfo(typeArguments.get(1));
-                        boolean hasKeyMutator = keyTypeInfo.getMutatorInterfaceTypeName() != null;
-                        boolean hasValueMutator = valueTypeInfo.getMutatorInterfaceTypeName() != null;
+                        boolean hasKeyMutator = keyTypeInfo.hasMutator();
+                        boolean hasValueMutator = valueTypeInfo.hasMutator();
                         
                         if (hasKeyMutator && hasValueMutator) {
                             // Map with mutable keys and values
