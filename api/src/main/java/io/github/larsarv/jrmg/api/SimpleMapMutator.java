@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * An interface for a mutable map that allows for fluent, chainable operations to modify its contents.
@@ -19,7 +18,7 @@ import java.util.function.Predicate;
  * @param <K> the type of keys in the map
  * @param <V> the type of values in the map
  */
-public interface SimpleMapMutator<K, V> extends Mutator<Map<K, V>> {
+public interface SimpleMapMutator<K, V> extends Builder<Map<K, V>> {
     /**
      * Returns the number of key-value mappings in the map.
      *

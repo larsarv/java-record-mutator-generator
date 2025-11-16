@@ -1,8 +1,5 @@
 package io.github.larsarv.jrmg.api;
 
-import java.util.Map;
-import java.util.function.BiFunction;
-
 /**
  * A functional interface that defines a mutation operation on a {@link java.util.Map}.
  * <p>
@@ -16,7 +13,7 @@ import java.util.function.BiFunction;
  * @param <M> the type of mutator used to modify the keys
  */
 @FunctionalInterface
-public interface NestedMapKeyMutateFunction<K, V, M extends Mutator<K>> {
+public interface NestedMapKeyMutateFunction<K, V, M extends Builder<K>> {
     /**
      * Applies a mutation operation with the provided {@link NestedKeyMapMutator} instance.
      *

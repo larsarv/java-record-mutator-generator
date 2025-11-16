@@ -17,7 +17,7 @@ import java.util.function.Function;
  * @param <MK> the type of record mutator used to modify the keys
  * @param <MV> the type of record mutator used to modify the values
  */
-public class MapMutatorImpl<K, V, MK extends Mutator<K>, MV extends Mutator<V>> 
+public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
     implements NestedKeyValueMapMutator<K, V, MK, MV>, NestedKeyMapMutator<K, V, MK>, NestedValueMapMutator<K, V, MV> {
     
     private Map<K, V> map;
@@ -55,7 +55,7 @@ public class MapMutatorImpl<K, V, MK extends Mutator<K>, MV extends Mutator<V>>
      * @param <MK> the type of record mutator used to modify the keys
      * @param <MV> the type of record mutator used to modify the values
      */
-    public static <K, V, MK extends Mutator<K>, MV extends Mutator<V>> MapMutatorImpl<K, V, MK, MV> mutator(
+    public static <K, V, MK extends Builder<K>, MV extends Builder<V>> MapMutatorImpl<K, V, MK, MV> mutator(
             Map<K, V> map,
             Function<K, MK> keyMutatorFactory,
             Function<V, MV> valueMutatorFactory

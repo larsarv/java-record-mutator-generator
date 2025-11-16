@@ -16,7 +16,7 @@ import java.util.Map;
  * @param <MV> the type of mutator used to modify the values
  */
 @FunctionalInterface
-public interface NestedMapKeyValueMutateFunction<K, V, MK extends Mutator<K>, MV extends Mutator<V>> {
+public interface NestedMapKeyValueMutateFunction<K, V, MK extends Builder<K>, MV extends Builder<V>> {
     /**
      * Applies a mutation operation with the provided {@link NestedKeyValueMapMutator} instance.
      *

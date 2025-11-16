@@ -15,7 +15,7 @@ import java.util.function.Predicate;
  *
  * @param <T> the type of elements in the list
  */
-public interface SimpleListMutator<T> extends Mutator<List<T>> {
+public interface SimpleListMutator<T> extends Builder<List<T>> {
     /**
      * Returns the number of elements in the list.
      *

@@ -1,7 +1,6 @@
 package io.github.larsarv.jrmg.api;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -18,7 +17,7 @@ import java.util.function.Function;
  * @param <V> the type of values in the map
  * @param <M> the type of record mutator used to modify the keys
  */
-public interface NestedKeyMapMutator<K, V, M extends Mutator<K>> extends SimpleMapMutator<K, V>, MapKeyMutator<K, V, M> {
+public interface NestedKeyMapMutator<K, V, M extends Builder<K>> extends SimpleMapMutator<K, V>, MapKeyMutator<K, V, M> {
     @Override
     NestedKeyMapMutator<K, V, M> put(K key, V value);
     @Override

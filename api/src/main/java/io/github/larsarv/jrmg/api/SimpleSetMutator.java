@@ -1,8 +1,6 @@
 package io.github.larsarv.jrmg.api;
 
-import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -16,7 +14,7 @@ import java.util.function.Predicate;
  *
  * @param <T> the type of elements in the set
  */
-public interface SimpleSetMutator<T> extends Mutator<Set<T>> {
+public interface SimpleSetMutator<T> extends Builder<Set<T>> {
     /**
      * Returns the number of elements in the set.
      *

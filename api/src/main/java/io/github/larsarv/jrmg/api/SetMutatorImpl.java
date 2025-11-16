@@ -20,9 +20,9 @@ import java.util.function.Predicate;
  * the result with {@link #build()}.
  *
  * @param <T> the type of elements stored in the set.
- * @param <M> the type of {@link Mutator} used to mutate the elements of type {@code T}
+ * @param <M> the type of {@link Builder} used to mutate the elements of type {@code T}
  */
-public class SetMutatorImpl<T, U, M extends Mutator<T>> implements NestedSetMutator<T, U, M> {
+public class SetMutatorImpl<T, U, M extends Builder<T>> implements NestedSetMutator<T, U, M> {
     private Set<T> set;
     private final Function<T, U> elementMutatorFactory;
     private boolean locked = false;
@@ -44,13 +44,13 @@ public class SetMutatorImpl<T, U, M extends Mutator<T>> implements NestedSetMuta
      * Each element in the set can be individually mutated using the factory-provided mutator.
      *
      * @param <T> the type of elements stored in the set.
-     * @param <E> the type of {@link Mutator} used to mutate the elements of type {@code T}
+     * @param <E> the type of {@link Builder} used to mutate the elements of type {@code T}
      * @param set the initial set to be wrapped; if null, an empty set is created
      * @param elementMutatorFactory a function that generates a mutator for each element in the set,
      *                              null if the element data type is simple
      * @return a new set mutator instance that can be used to modify the set
      */
-    public static <T, U, E extends Mutator<T>> NestedSetMutator<T, U, E> mutator(Set<T> set, Function<T, U> elementMutatorFactory) {
+    public static <T, U, E extends Builder<T>> NestedSetMutator<T, U, E> mutator(Set<T> set, Function<T, U> elementMutatorFactory) {
         return new SetMutatorImpl<>(set, elementMutatorFactory);
     }
 

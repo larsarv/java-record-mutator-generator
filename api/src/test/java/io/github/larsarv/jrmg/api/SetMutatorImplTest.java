@@ -12,7 +12,7 @@ class SetMutatorImplTest {
             this(false);
         }
     }
-    static class TestRecordMutator implements Mutator<TestRecord> {
+    static class TestRecordMutator implements Builder<TestRecord> {
         boolean test;
         
         public TestRecordMutator(TestRecord testRecord) {
@@ -32,7 +32,7 @@ class SetMutatorImplTest {
         }
     }
     record StringRecord(String value) {}
-    static class StringRecordMutator implements Mutator<StringRecord> {
+    static class StringRecordMutator implements Builder<StringRecord> {
         String value;
 
         public StringRecordMutator(StringRecord stringRecord) {

@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  * @param <T> the type the list element.
  * @param <M> the type of record mutator used to modify the record
  */
-public interface NestedListMutator<T, U, M extends Mutator<T>> extends SimpleListMutator<T> {
+public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleListMutator<T> {
     @Override
     T get(int index);
     @Override

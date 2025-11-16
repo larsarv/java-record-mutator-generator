@@ -99,7 +99,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         ClassName recordClassName = ClassName.get(recordElement);
 
         TypeSpec.Builder mutatorClassBuilder = TypeSpec.classBuilder(mutatorClassName)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Mutator.class), recordClassName))
+                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Builder.class), recordClassName))
                 .addModifiers(Modifier.PUBLIC);
 
 
@@ -171,7 +171,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         mutatorClassBuilder.addType(TypeSpec.classBuilder("ConstructorDone")
                 .addModifiers(Modifier.PUBLIC)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Mutator.class), recordTypeName))
+                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Builder.class), recordTypeName))
                 .addMethod(MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PRIVATE)
                         .build())

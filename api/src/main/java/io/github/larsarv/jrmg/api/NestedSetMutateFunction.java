@@ -12,7 +12,7 @@ package io.github.larsarv.jrmg.api;
  * @param <M> the type of record mutator used to create or mutate the record
  */
 @FunctionalInterface
-public interface NestedSetMutateFunction<T, U, M extends Mutator<T>> {
+public interface NestedSetMutateFunction<T, U, M extends Builder<T>> {
     /**
      * Applies a mutation operation with the provided {@link NestedSetMutator} instance.
      *

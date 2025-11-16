@@ -6,7 +6,7 @@ import java.util.function.Function;
 /**
  * A mutator interface for mutable maps with nested operations that involve mutators for keys.
  * <p>
- * This interface provides methods to manipulate map keys using {@link Mutator} instances,
+ * This interface provides methods to manipulate map keys using {@link Builder} instances,
  * enabling more complex transformations that involve mutating the internal state of keys.
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable map of the modified records.
@@ -15,7 +15,7 @@ import java.util.function.Function;
  * @param <V> the type of values in the map
  * @param <M> the type of record mutator used to modify the keys
  */
-public interface MapKeyMutator<K, V, M extends Mutator<K>> {
+public interface MapKeyMutator<K, V, M extends Builder<K>> {
     /**
      * Associates the specified value with a new key generated using the provided mutator function.
      * The mutator is used to construct the key before associating it with the value.

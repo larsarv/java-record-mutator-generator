@@ -10,12 +10,12 @@ import java.util.function.Predicate;
 /**
  * An implementation of {@link NestedListMutator} that provides a fluent, chainable API
  * for mutating a list of records. It allows for adding, removing, filtering, and updating
- * records using {@link Mutator} instances, which can be used to create or modify
+ * records using {@link Builder} instances, which can be used to create or modify
  * records in place.
  * <p>
  * This implementation maintains a mutable list internally and provides methods to
  * modify its contents. The mutator is built around a factory function that creates
- * {@link Mutator} instances for each record, enabling transformations that
+ * {@link Builder} instances for each record, enabling transformations that
  * affect the internal state of records.
  * <p>
  * The {@link #build()} method returns an immutable list
@@ -23,9 +23,9 @@ import java.util.function.Predicate;
  * and the mutator returns itself for method chaining.
  *
  * @param <T> the type of elements stored in the list.
- * @param <M> the type of {@link Mutator} used to mutate the elements of type {@code T}
+ * @param <M> the type of {@link Builder} used to mutate the elements of type {@code T}
  */
-public class ListMutatorImpl<T, U, M extends Mutator<T>> implements NestedListMutator<T, U, M> {
+public class ListMutatorImpl<T, U, M extends Builder<T>> implements NestedListMutator<T, U, M> {
     private final List<T> list;
     private final Function<T, U> elementMutatorFactory;
     private boolean locked = false;
@@ -47,13 +47,13 @@ public class ListMutatorImpl<T, U, M extends Mutator<T>> implements NestedListMu
      * Each element in the list can be individually mutated using the factory-provided mutator.
      *
      * @param <T> the type of elements stored in the list.
-     * @param <E> the type of {@link Mutator} used to mutate the elements of type {@code T}
+     * @param <E> the type of {@link Builder} used to mutate the elements of type {@code T}
      * @param list the initial list to be wrapped; if null, an empty list is created
      * @param elementMutatorFactory a function that generates a mutator for each element in the list,
      *                              null if the element data type is simple
      * @return a new list mutator instance that can be used to modify the list
      */
-    public static <T, U, E extends Mutator<T>> NestedListMutator<T, U, E> mutator(
+    public static <T, U, E extends Builder<T>> NestedListMutator<T, U, E> mutator(
             List<T> list,
             Function<T, U> elementMutatorFactory
     ) {

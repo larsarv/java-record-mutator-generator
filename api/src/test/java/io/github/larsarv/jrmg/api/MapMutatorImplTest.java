@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class MapMutatorImplTest {
 
     record KeyRecord(String value) {}
-    static class KeyRecordMutator implements Mutator<KeyRecord> {
+    static class KeyRecordMutator implements Builder<KeyRecord> {
         String value;
 
         public KeyRecordMutator(KeyRecord keyRecord) {
@@ -29,7 +29,7 @@ class MapMutatorImplTest {
     }
     
     record ValueRecord(String value) {}
-    static class ValueRecordMutator implements Mutator<ValueRecord> {
+    static class ValueRecordMutator implements Builder<ValueRecord> {
         String value;
 
         public ValueRecordMutator(ValueRecord valueRecord) {

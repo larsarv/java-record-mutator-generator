@@ -11,7 +11,7 @@ package io.github.larsarv.jrmg.api;
  * @param <M> the type of mutator used to create or mutate the element
  */
 @FunctionalInterface
-public interface NestedListMutateFunction<T, U, M extends Mutator<T>> {
+public interface NestedListMutateFunction<T, U, M extends Builder<T>> {
     /**
      * Applies a mutation operation with the provided {@link NestedListMutator} instance.
      *

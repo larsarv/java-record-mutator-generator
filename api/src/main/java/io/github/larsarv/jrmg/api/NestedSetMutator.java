@@ -9,7 +9,7 @@ import java.util.function.Predicate;
  * to modify the contents of a set.
  * <p>
  * This interface extends {@link SimpleSetMutator} and adds methods to manipulate records
- * using {@link Mutator} instances, enabling more complex transformations that
+ * using {@link Builder} instances, enabling more complex transformations that
  * involve mutating the internal state of records.
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable set of the modified records.
@@ -17,7 +17,7 @@ import java.util.function.Predicate;
  * @param <T> the type the set element.
  * @param <M> the type of record mutator used to modify the record
  */
-public interface NestedSetMutator<T, U, M extends Mutator<T>> extends SimpleSetMutator<T> {
+public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetMutator<T> {
     @Override
     NestedSetMutator<T, U, M> add(T record);
     @Override
