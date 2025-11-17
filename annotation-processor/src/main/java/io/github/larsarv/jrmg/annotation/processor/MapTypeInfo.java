@@ -14,7 +14,6 @@ import java.util.function.Function;
 public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
     private final static ClassName FUNCTION_CLASS_NAME = ClassName.get(Function.class);
 
-    private final TypeInfo keyTypeInfo;
     private final TypeInfo valueTypeInfo;
     private final TypeName mutatorInterfaceTypeName; // Type of the mutator including generic parameters
     private final ClassName mutatorImplementationClassName; // Mutator implementation class
@@ -24,7 +23,6 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
      * Constructs a MapTypeInfo with the given type information.
      *
      * @param typeName the TypeName of the Map component
-     * @param keyTypeInfo the TypeInfo for the keys contained in the map
      * @param valueTypeInfo the TypeInfo for the values contained in the map
      * @param mutatorInterfaceTypeName the TypeName of the mutator interface for this map
      * @param mutatorImplementationClassName the ClassName of the mutator implementation for this map
@@ -32,14 +30,12 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
      */
     public MapTypeInfo(
             TypeName typeName,
-            TypeInfo keyTypeInfo,
             TypeInfo valueTypeInfo,
             TypeName mutatorInterfaceTypeName,
             ClassName mutatorImplementationClassName,
             TypeName mutatorFunctionTypeName
     ) {
         super(typeName);
-        this.keyTypeInfo = keyTypeInfo;
         this.valueTypeInfo = valueTypeInfo;
         this.mutatorInterfaceTypeName = mutatorInterfaceTypeName;
         this.mutatorImplementationClassName = mutatorImplementationClassName;
@@ -116,8 +112,6 @@ public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
     @Override
     public void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
         codeBlockbuilder.add("\nelement$L -> $T.mutator(element$L, ", factoryMethodIndex, mutatorImplementationClassName, factoryMethodIndex);
-        keyTypeInfo.addMutatorFactoryCode(codeBlockbuilder, factoryMethodIndex + 1);
-        codeBlockbuilder.add(", ");
         valueTypeInfo.addMutatorFactoryCode(codeBlockbuilder, factoryMethodIndex + 2);
         codeBlockbuilder.add(")");
     }

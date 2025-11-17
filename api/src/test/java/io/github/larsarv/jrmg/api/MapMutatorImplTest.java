@@ -56,8 +56,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         ValueRecord result = mutator.get(new KeyRecord("key2"));
@@ -72,8 +72,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
         ValueRecord value = new ValueRecord("value3");
 
         // Act
@@ -92,8 +92,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.remove(new KeyRecord("key2"));
@@ -114,8 +114,8 @@ class MapMutatorImplTest {
             new KeyRecord("key2"), value,
             new KeyRecord("key3"), new ValueRecord("value3"),
             new KeyRecord("key4"), new ValueRecord("value4"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.filter((k, v) -> v == value);
@@ -136,8 +136,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), value2);
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.updateAll((key, item) -> {
@@ -162,8 +162,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Map<KeyRecord, ValueRecord> builtMap = mutator.build();
@@ -179,8 +179,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Map<KeyRecord, ValueRecord> builtMap = mutator.build();
@@ -196,8 +196,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Map<KeyRecord, ValueRecord> builtMap = mutator.buildCopy();
@@ -213,8 +213,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Map<KeyRecord, ValueRecord> builtMap = mutator.buildCopy();
@@ -226,8 +226,8 @@ class MapMutatorImplTest {
     @Test
     void shouldHandleNullMapInConstructor() {
         // Arrange
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(null, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(null, ValueRecordMutator::new);
 
         // Act
         Map<KeyRecord, ValueRecord> builtMap = mutator.build();
@@ -240,8 +240,8 @@ class MapMutatorImplTest {
     void shouldAllowAddingNullElementToTheMap() {
         // Arrange
         Map<KeyRecord, ValueRecord> originalMap = Map.of(new KeyRecord("key1"), new ValueRecord("value1"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.put(new KeyRecord("key2"), (ValueRecord) null);
@@ -258,8 +258,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.put(new KeyRecord("key3"), m -> m.setValue("updatedValue"));
@@ -275,8 +275,8 @@ class MapMutatorImplTest {
         // Arrange
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
                 new KeyRecord("key1"), new ValueRecord("value1"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-                new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.put(new KeyRecord("key2"), m -> m.setValue("newValue"));
@@ -294,8 +294,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.mutateValue(new KeyRecord("key2"), m -> m.setValue("updatedValue"));
@@ -311,8 +311,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         boolean result = mutator.containsKey(new KeyRecord("key1"));
@@ -328,8 +328,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), valueRecord);
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         boolean result = mutator.containsValue(valueRecord);
@@ -345,8 +345,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         int size = mutator.size();
@@ -359,8 +359,8 @@ class MapMutatorImplTest {
     void shouldTestIsEmpty() {
         // Arrange
         Map<KeyRecord, ValueRecord> originalMap = Map.of();
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         boolean isEmpty = mutator.isEmpty();
@@ -373,8 +373,8 @@ class MapMutatorImplTest {
     void shouldTestIsEmptyWhenNotEmpty() {
         // Arrange
         Map<KeyRecord, ValueRecord> originalMap = Map.of(new KeyRecord("key1"), new ValueRecord("value1"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         boolean isEmpty = mutator.isEmpty();
@@ -390,8 +390,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Set<KeyRecord> keySet = mutator.keySet();
@@ -410,8 +410,8 @@ class MapMutatorImplTest {
             new KeyRecord("key1"), value1,
             new KeyRecord("key2"), value2,
             new KeyRecord("key3"), value3);
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         Collection<ValueRecord> values = mutator.values();
@@ -430,8 +430,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> additionalMap = Map.of(
             new KeyRecord("key2"), new ValueRecord("value2"),
             new KeyRecord("key3"), new ValueRecord("value3"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.putAll(additionalMap);
@@ -450,9 +450,10 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
- 
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
+
+
         // Act
         mutator.clear();
  
@@ -467,8 +468,8 @@ class MapMutatorImplTest {
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+                new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.update(new KeyRecord("key2"), v -> new ValueRecord("updatedValue"));
@@ -478,70 +479,15 @@ class MapMutatorImplTest {
         assertEquals("updatedValue", newMap.get(new KeyRecord("key2")).value());
     }
     
-    @Test
-    void shouldPutWithKeyMutator() {
-        // Arrange
-        Map<KeyRecord, ValueRecord> originalMap = Map.of(
-            new KeyRecord("key1"), new ValueRecord("value1"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
 
-        // Act
-        mutator.put(m -> m.setValue("newKey"), new ValueRecord("newValue"));
-        Map<KeyRecord, ValueRecord> newMap = mutator.build();
-
-        // Assert
-        assertTrue(newMap.containsKey(new KeyRecord("newKey")));
-        assertEquals("newValue", newMap.get(new KeyRecord("newKey")).value());
-    }
-    
-    @Test
-    void shouldMutateKey() {
-        // Arrange
-        Map<KeyRecord, ValueRecord> originalMap = Map.of(
-            new KeyRecord("oldKey"), new ValueRecord("value1"),
-            new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
-
-        // Act
-        mutator.mutateKey(new KeyRecord("oldKey"), m -> m.setValue("newKey"));
-        Map<KeyRecord, ValueRecord> newMap = mutator.build();
-
-        // Assert
-        assertFalse(newMap.containsKey(new KeyRecord("oldKey")));
-        assertTrue(newMap.containsKey(new KeyRecord("newKey")));
-        assertEquals("value1", newMap.get(new KeyRecord("newKey")).value());
-    }
-    
-    @Test
-    void shouldMutateAllKeys() {
-        // Arrange
-        Map<KeyRecord, ValueRecord> originalMap = Map.of(
-            new KeyRecord("key1"), new ValueRecord("value1"),
-            new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
-
-        // Act
-        mutator.mutateAllKeys(m -> m.setValue(m.build().value() + "_modified"));
-        Map<KeyRecord, ValueRecord> newMap = mutator.build();
-
-        // Assert
-        assertTrue(newMap.containsKey(new KeyRecord("key1_modified")));
-        assertTrue(newMap.containsKey(new KeyRecord("key2_modified")));
-        assertEquals("value1", newMap.get(new KeyRecord("key1_modified")).value());
-        assertEquals("value2", newMap.get(new KeyRecord("key2_modified")).value());
-    }
-    
     @Test
     void shouldMutateAllValues() {
         // Arrange
         Map<KeyRecord, ValueRecord> originalMap = Map.of(
             new KeyRecord("key1"), new ValueRecord("value1"),
             new KeyRecord("key2"), new ValueRecord("value2"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
+        MapMutatorImpl<KeyRecord, ValueRecord, ValueRecordMutator, ValueRecordMutator> mutator =
+            new MapMutatorImpl<>(originalMap, ValueRecordMutator::new);
 
         // Act
         mutator.mutateAllValues((k, m) -> m.setValue(k.value() + "_modified"));
@@ -550,24 +496,6 @@ class MapMutatorImplTest {
         // Assert
         assertEquals("key1_modified", newMap.get(new KeyRecord("key1")).value());
         assertEquals("key2_modified", newMap.get(new KeyRecord("key2")).value());
-    }
-    
-    @Test
-    void shouldPutWithKeyAndValueMutator() {
-        // Arrange
-        Map<KeyRecord, ValueRecord> originalMap = Map.of(
-            new KeyRecord("key1"), new ValueRecord("value1"));
-        MapMutatorImpl<KeyRecord, ValueRecord, KeyRecordMutator, ValueRecordMutator> mutator =
-            new MapMutatorImpl<>(originalMap, KeyRecordMutator::new, ValueRecordMutator::new);
-
-        // Act
-        mutator.put(m -> m.setValue("newKey"), m -> m.setValue("newValue"));
-        Map<KeyRecord, ValueRecord> newMap = mutator.build();
-
-        // Assert
-        assertEquals(2, newMap.size());
-        assertTrue(newMap.containsKey(new KeyRecord("newKey")));
-        assertEquals("newValue", newMap.get(new KeyRecord("newKey")).value());
     }
     
 }

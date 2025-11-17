@@ -4,25 +4,9 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-/**
- * A concrete implementation of map mutator interfaces that provides methods for
- * both basic map operations and complex mutations for keys and values using mutators.
- * <p>
- * This class implements {@link NestedKeyValueMapMutator}, {@link NestedKeyMapMutator} and
- * {@link NestedValueMapMutator}, which extends multiple interfaces
- * including {@link SimpleMapMutator}, {@link MapKeyMutator}, and {@link MapValueMutator}.
- *
- * @param <K> the type of keys in the map.
- * @param <V> the type of values in the map.
- * @param <MK> the type of record mutator used to modify the keys
- * @param <MV> the type of record mutator used to modify the values
- */
-public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
-    implements NestedKeyValueMapMutator<K, V, MK, MV>, NestedKeyMapMutator<K, V, MK>, NestedValueMapMutator<K, V, MV> {
-    
+public class MapMutatorImpl<K, V, MFP, MFR extends Builder<V>> implements NestedMapMutator<K, V, MFP, MFR> {
     private Map<K, V> map;
-    private final Function<K, MK> keyMutatorFactory;
-    private final Function<V, MV> valueMutatorFactory;
+    private final Function<V, MFP> mutatorFactory;
 
     private boolean locked = false;
 
@@ -30,13 +14,11 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
      * Constructs a new {@code MapMutatorImpl} instance with the provided map and mutator factories.
      *
      * @param map the initial map to be mutated; if null, a new empty {@code HashMap} is created
-     * @param keyMutatorFactory a function that returns a mutator for the given key
      * @param valueMutatorFactory a function that returns a mutator for the given value
      */
-    public MapMutatorImpl(Map<K, V> map, Function<K, MK> keyMutatorFactory, Function<V, MV> valueMutatorFactory) {
+    public MapMutatorImpl(Map<K, V> map, Function<V, MFP> valueMutatorFactory) {
         this.map = map == null ? new HashMap<>() : new HashMap<>(map);
-        this.keyMutatorFactory = keyMutatorFactory;
-        this.valueMutatorFactory = valueMutatorFactory;
+        this.mutatorFactory = valueMutatorFactory;
     }
 
     /**
@@ -46,21 +28,18 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
      * using provided mutator factories.
      *
      * @param map the initial map to be mutated; if null, a new empty {@code HashMap} is created
-     * @param keyMutatorFactory a function that returns a mutator for the given key
      * @param valueMutatorFactory a function that returns a mutator for the given value
      * @return a new {@code MapMutatorImpl} instance configured with the provided parameters
      *
      * @param <K> the type of keys in the map.
      * @param <V> the type of values in the map.
-     * @param <MK> the type of record mutator used to modify the keys
-     * @param <MV> the type of record mutator used to modify the values
+     * @param <MFR> the type of record mutator used to modify the values
      */
-    public static <K, V, MK extends Builder<K>, MV extends Builder<V>> MapMutatorImpl<K, V, MK, MV> mutator(
+    public static <K, V, MFP, MFR extends Builder<V>> MapMutatorImpl<K, V, MFP, MFR> mutator(
             Map<K, V> map,
-            Function<K, MK> keyMutatorFactory,
-            Function<V, MV> valueMutatorFactory
+            Function<V, MFP> valueMutatorFactory
     )  {
-        return new MapMutatorImpl<>(map, keyMutatorFactory, valueMutatorFactory);
+        return new MapMutatorImpl<>(map, valueMutatorFactory);
     }
 
     private void checkLocked() {
@@ -105,21 +84,21 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> put(K key, V value) {
+    public MapMutatorImpl<K, V, MFP, MFR> put(K key, V value) {
         checkLocked();
         map.put(key, value);
         return this;
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> remove(K key) {
+    public MapMutatorImpl<K, V, MFP, MFR> remove(K key) {
         checkLocked();
         map.remove(key);
         return this;
     }
 
     @Override
-    public MapMutatorImpl<K, V, MK, MV> filter(BiFunction<K, V, Boolean> filterFunction) {
+    public MapMutatorImpl<K, V, MFP, MFR> filter(BiFunction<K, V, Boolean> filterFunction) {
         checkLocked();
         Map<K, V> newMap = new HashMap<>();
         for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -132,7 +111,7 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> update(K key, Function<V, V> mutateFunction) {
+    public MapMutatorImpl<K, V, MFP, MFR> update(K key, Function<V, V> mutateFunction) {
         checkLocked();
         if (map.containsKey(key)) {
             V currentValue = map.get(key);
@@ -143,7 +122,7 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> updateAll(BiFunction<K, V, V> mutateFunction) {
+    public MapMutatorImpl<K, V, MFP, MFR> updateAll(BiFunction<K, V, V> mutateFunction) {
         checkLocked();
         Map<K, V> newMap = new HashMap<>();
         for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -155,86 +134,48 @@ public class MapMutatorImpl<K, V, MK extends Builder<K>, MV extends Builder<V>>
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> putAll(Map<? extends K, ? extends V> m) {
+    public MapMutatorImpl<K, V, MFP, MFR> putAll(Map<? extends K, ? extends V> m) {
         checkLocked();
         map.putAll(m);
         return this;
     }
 
     @Override
-    public MapMutatorImpl<K, V, MK, MV> clear() {
+    public MapMutatorImpl<K, V, MFP, MFR> clear() {
         checkLocked();
         map.clear();
         return this;
     }
 
+
     @Override
-    public MapMutatorImpl<K, V, MK, MV> put(Function<MK, MK> mutateFunction, V value) {
+    public MapMutatorImpl<K, V, MFP, MFR> put(K key, Function<MFP, MFR> mutateFunction) {
         checkLocked();
-        map.put(mutateFunction.apply(keyMutatorFactory.apply(null)).build(), value);
-        return this;
-    }
-    
-    @Override
-    public MapMutatorImpl<K, V, MK, MV> mutateKey(K key, Function<MK, MK> mutateFunction) {
-        checkLocked();
-        if (map.containsKey(key)) {
-            V value = map.remove(key);
-            K newKey = mutateFunction.apply(keyMutatorFactory.apply(key)).build();
-            map.put(newKey, value);
-        }
-        return this;
-    }
-    
-    @Override
-    public MapMutatorImpl<K, V, MK, MV> mutateAllKeys(Function<MK, MK> mutateFunction) {
-        checkLocked();
-        Map<K, V> newMap = new HashMap<>();
-        for (Map.Entry<K, V> entry : map.entrySet()) {
-            K newKey = mutateFunction.apply(keyMutatorFactory.apply(entry.getKey())).build();
-            newMap.put(newKey, entry.getValue());
-        }
-        this.map = newMap;
-        return this;
-    }
-    
-    @Override
-    public MapMutatorImpl<K, V, MK, MV> put(K key, Function<MV, MV> mutateFunction) {
-        checkLocked();
-        V value = mutateFunction.apply(valueMutatorFactory.apply(null)).build();
+        V value = mutateFunction.apply(mutatorFactory.apply(null)).build();
         map.put(key, value);
         return this;
     }
 
     @Override
-    public MapMutatorImpl<K, V, MK, MV> mutateValue(K key, Function<MV, MV> mutateFunction) {
+    public MapMutatorImpl<K, V, MFP, MFR> mutateValue(K key, Function<MFP, MFR> mutateFunction) {
         checkLocked();
         if (map.containsKey(key)) {
             V currentValue = map.get(key);
-            V newValue = mutateFunction.apply(valueMutatorFactory.apply(currentValue)).build();
+            V newValue = mutateFunction.apply(mutatorFactory.apply(currentValue)).build();
             map.put(key, newValue);
         }
         return this;
     }
     
     @Override
-    public MapMutatorImpl<K, V, MK, MV> mutateAllValues(BiFunction<K, MV, MV> mutateFunction) {
+    public MapMutatorImpl<K, V, MFP, MFR> mutateAllValues(BiFunction<K, MFP, MFR> mutateFunction) {
         checkLocked();
         Map<K, V> newMap = new HashMap<>();
         for (Map.Entry<K, V> entry : map.entrySet()) {
-            V newValue = mutateFunction.apply(entry.getKey(), valueMutatorFactory.apply(entry.getValue())).build();
+            V newValue = mutateFunction.apply(entry.getKey(), mutatorFactory.apply(entry.getValue())).build();
             newMap.put(entry.getKey(), newValue);
         }
         this.map = newMap;
-        return this;
-    }
-
-    @Override
-    public NestedKeyValueMapMutator<K, V, MK, MV> put(Function<MK, MK> mutateKeyFunction, Function<MV, MV> mutateValueFunction) {
-        checkLocked();
-        K key = mutateKeyFunction.apply(keyMutatorFactory.apply(null)).build();
-        V value = mutateValueFunction.apply(valueMutatorFactory.apply(null)).build();
-        map.put(key, value);
         return this;
     }
 

@@ -35,13 +35,9 @@ public class TypeInfoFactory {
     private static final ClassName CLASS_NAME_SIMPLE_SET_MUTATE_FUNCTION = ClassName.get(SimpleSetMutateFunction.class);
 
     private static final ClassName CLASS_NAME_MAP_MUTATOR_IMPL = ClassName.get(MapMutatorImpl.class);
-    private static final ClassName CLASS_NAME_NESTED_KEY_VALUE_MAP_MUTATOR = ClassName.get(NestedKeyValueMapMutator.class);
-    private static final ClassName CLASS_NAME_NESTED_KEY_MAP_MUTATOR = ClassName.get(NestedKeyMapMutator.class);
-    private static final ClassName CLASS_NAME_NESTED_VALUE_MAP_MUTATOR = ClassName.get(NestedValueMapMutator.class);
+    private static final ClassName CLASS_NAME_NESTED_MAP_MUTATOR = ClassName.get(NestedMapMutator.class);
     private static final ClassName CLASS_NAME_SIMPLE_MAP_MUTATOR = ClassName.get(SimpleMapMutator.class);
-    private static final ClassName CLASS_NAME_NESTED_MAP_KEY_VALUE_MUTATE_FUNCTION = ClassName.get(NestedMapKeyValueMutateFunction.class);
-    private static final ClassName CLASS_NAME_NESTED_MAP_KEY_MUTATE_FUNCTION = ClassName.get(NestedMapKeyMutateFunction.class);
-    private static final ClassName CLASS_NAME_NESTED_MAP_VALUE_MUTATE_FUNCTION = ClassName.get(NestedMapValueMutateFunction.class);
+    private static final ClassName CLASS_NAME_NESTED_MAP_MUTATE_FUNCTION = ClassName.get(NestedMapMutateFunction.class);
     private static final ClassName CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION = ClassName.get(SimpleMapMutateFunction.class);
 
 
@@ -127,68 +123,33 @@ public class TypeInfoFactory {
                     if (typeArguments.size() == 2) {
                         TypeInfo keyTypeInfo = createTypeInfo(typeArguments.get(0));
                         TypeInfo valueTypeInfo = createTypeInfo(typeArguments.get(1));
-                        boolean hasKeyMutator = keyTypeInfo.hasMutator();
                         boolean hasValueMutator = valueTypeInfo.hasMutator();
                         
-                        if (hasKeyMutator && hasValueMutator) {
-                            // Map with mutable keys and values
-                            return new MapTypeInfo(
-                                    typeName,
-                                    keyTypeInfo,
-                                    valueTypeInfo,
-                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_KEY_VALUE_MAP_MUTATOR,
-                                        keyTypeInfo.getTypeName(),
-                                        valueTypeInfo.getTypeName(),
-                                        keyTypeInfo.getMutatorInterfaceTypeName(),
-                                        valueTypeInfo.getMutatorInterfaceTypeName()),
-                                    CLASS_NAME_MAP_MUTATOR_IMPL,
-                                    ParameterizedTypeName.get(
-                                            CLASS_NAME_NESTED_MAP_KEY_VALUE_MUTATE_FUNCTION,
-                                            keyTypeInfo.getTypeName(),
-                                            valueTypeInfo.getTypeName(),
-                                            keyTypeInfo.getMutatorInterfaceTypeName(),
-                                            valueTypeInfo.getMutatorInterfaceTypeName()));
-                        } else if (hasKeyMutator) {
-                            // Map with mutable keys only
-                            return new MapTypeInfo(
-                                    typeName,
-                                    keyTypeInfo,
-                                    valueTypeInfo,
-                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_KEY_MAP_MUTATOR,
-                                        keyTypeInfo.getTypeName(),
-                                        valueTypeInfo.getTypeName(),
-                                        keyTypeInfo.getMutatorInterfaceTypeName()),
-                                    CLASS_NAME_MAP_MUTATOR_IMPL,
-                                    ParameterizedTypeName.get(
-                                            CLASS_NAME_NESTED_MAP_KEY_MUTATE_FUNCTION,
-                                            keyTypeInfo.getTypeName(),
-                                            valueTypeInfo.getTypeName(),
-                                            keyTypeInfo.getMutatorInterfaceTypeName()));
-                        } else if (hasValueMutator) {
+                        if (hasValueMutator) {
                             // Map with mutable values only
                             return new MapTypeInfo(
                                     typeName,
-                                    keyTypeInfo,
                                     valueTypeInfo,
-                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_VALUE_MAP_MUTATOR,
-                                        keyTypeInfo.getTypeName(),
-                                        valueTypeInfo.getTypeName(),
-                                        valueTypeInfo.getMutatorInterfaceTypeName()),
-                                    CLASS_NAME_MAP_MUTATOR_IMPL,
-                                    ParameterizedTypeName.get(
-                                            CLASS_NAME_NESTED_MAP_VALUE_MUTATE_FUNCTION,
+                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_MAP_MUTATOR,
                                             keyTypeInfo.getTypeName(),
                                             valueTypeInfo.getTypeName(),
+                                            valueTypeInfo.getMutatorInterfaceTypeName(),
+                                            valueTypeInfo.getMutatorInterfaceTypeName()),
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    ParameterizedTypeName.get(
+                                            CLASS_NAME_NESTED_MAP_MUTATE_FUNCTION,
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName(),
+                                            valueTypeInfo.getMutatorInterfaceTypeName(),
                                             valueTypeInfo.getMutatorInterfaceTypeName()));
                         } else {
                             // Simple map
                             return new MapTypeInfo(
                                     typeName,
-                                    keyTypeInfo,
                                     valueTypeInfo,
                                     ParameterizedTypeName.get(CLASS_NAME_SIMPLE_MAP_MUTATOR,
-                                        keyTypeInfo.getTypeName(),
-                                        valueTypeInfo.getTypeName()),
+                                            keyTypeInfo.getTypeName(),
+                                            valueTypeInfo.getTypeName()),
                                     CLASS_NAME_MAP_MUTATOR_IMPL,
                                     ParameterizedTypeName.get(
                                             CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION,
