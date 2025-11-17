@@ -4,6 +4,17 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A mutable map implementation that allows transformation of values using mutators.
+ * This class provides a fluent API for mutating map entries while preserving immutability upon build.
+ *
+ * @param <K> the type of keys in the map.
+ * @param <V> the type of values in the map.
+ * @param <MFP> the type of the mutate function parameter.
+ * @param <MFR> the return type mutate function.
+ *
+ * @see NestedMapMutator
+ */
 public class MapMutatorImpl<K, V, MFP, MFR extends Builder<V>> implements NestedMapMutator<K, V, MFP, MFR> {
     private Map<K, V> map;
     private final Function<V, MFP> mutatorFactory;
@@ -33,7 +44,8 @@ public class MapMutatorImpl<K, V, MFP, MFR extends Builder<V>> implements Nested
      *
      * @param <K> the type of keys in the map.
      * @param <V> the type of values in the map.
-     * @param <MFR> the type of record mutator used to modify the values
+     * @param <MFP> the type of the mutate function parameter.
+     * @param <MFR> the return type mutate function.
      */
     public static <K, V, MFP, MFR extends Builder<V>> MapMutatorImpl<K, V, MFP, MFR> mutator(
             Map<K, V> map,

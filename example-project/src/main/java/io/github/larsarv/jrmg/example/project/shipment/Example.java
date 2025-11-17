@@ -28,8 +28,8 @@ public class Example {
         return ShipmentMutator.constructor()
                 .setShipmentNo("SHP001")
                 .setStatus(ShipmentStatus.CREATED)
-                .setParties(parties -> parties
-                        .put(PartyType.SENDER, party -> party.construct(partyConstructor ->partyConstructor
+                .constructParties(parties -> parties
+                        .put(PartyType.SENDER, party -> party
                                 .setName("Acme Corp")
                                 .constructAddress(address -> address
                                         .setAddress1("123 Main St")
@@ -44,8 +44,8 @@ public class Example {
                                                 .setValue("contact@acme.com"))
                                         .add(contactInfo -> contactInfo
                                                 .setType(ContactInfoType.PHONE)
-                                                .setValue("555-1234")))))
-                        .put(PartyType.RECEIVER, party -> party.construct(partyConstructor -> partyConstructor
+                                                .setValue("555-1234"))))
+                        .put(PartyType.RECEIVER, party -> party
                                 .setName("John Doe")
                                 .constructAddress(address -> address
                                         .setAddress1("456 Oak Ave")
@@ -60,7 +60,7 @@ public class Example {
                                                 .setValue("john.doe@example.com"))
                                         .add(contactInfo -> contactInfo
                                                 .setType(ContactInfoType.PHONE)
-                                                .setValue("555-5678"))))))
+                                                .setValue("555-5678")))))
                 .constructParcels(parcels -> parcels
                         .add(parcel -> parcel
                                 .setParcelNo("PARCEL001")

@@ -1,7 +1,6 @@
 package io.github.larsarv.jrmg.annotation.processor;
 
 import com.palantir.javapoet.ClassName;
-import com.palantir.javapoet.ParameterizedTypeName;
 import com.palantir.javapoet.TypeName;
 import io.github.larsarv.jrmg.api.*;
 
@@ -126,24 +125,41 @@ public class TypeInfoFactory {
                         boolean hasValueMutator = valueTypeInfo.hasMutator();
                         
                         if (hasValueMutator) {
-                            // Map with mutable values only
+                            // Map with mutable values
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    CLASS_NAME_NESTED_MAP_MUTATOR,
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    CLASS_NAME_NESTED_MAP_MUTATE_FUNCTION);
+/*
                             return new MapTypeInfo(
                                     typeName,
                                     valueTypeInfo,
-                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_MAP_MUTATOR,
+                                    ParameterizedTypeName.get(CLASS_NAME_NESTED_MAP_MUTATOR, // TODO Move into MapTypeInfo
                                             keyTypeInfo.getTypeName(),
                                             valueTypeInfo.getTypeName(),
                                             valueTypeInfo.getMutatorInterfaceTypeName(),
                                             valueTypeInfo.getMutatorInterfaceTypeName()),
                                     CLASS_NAME_MAP_MUTATOR_IMPL,
-                                    ParameterizedTypeName.get(
+                                    ParameterizedTypeName.get( // TODO Move into MapTypeInfo
                                             CLASS_NAME_NESTED_MAP_MUTATE_FUNCTION,
                                             keyTypeInfo.getTypeName(),
                                             valueTypeInfo.getTypeName(),
                                             valueTypeInfo.getMutatorInterfaceTypeName(),
                                             valueTypeInfo.getMutatorInterfaceTypeName()));
+ */
                         } else {
                             // Simple map
+                            return new MapTypeInfo(
+                                    typeName,
+                                    keyTypeInfo,
+                                    valueTypeInfo,
+                                    CLASS_NAME_SIMPLE_MAP_MUTATOR,
+                                    CLASS_NAME_MAP_MUTATOR_IMPL,
+                                    CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION);
+/*
                             return new MapTypeInfo(
                                     typeName,
                                     valueTypeInfo,
@@ -155,6 +171,8 @@ public class TypeInfoFactory {
                                             CLASS_NAME_SIMPLE_MAP_MUTATE_FUNCTION,
                                             keyTypeInfo.getTypeName(),
                                             valueTypeInfo.getTypeName()));
+
+ */
                         }
                     }
                 }

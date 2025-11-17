@@ -1,164 +1,146 @@
 package io.github.larsarv.jrmg.annotation.processor;
 
-import com.palantir.javapoet.*;
-
-import javax.lang.model.element.Modifier;
-import java.util.function.Function;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.ParameterizedTypeName;
+import com.palantir.javapoet.TypeName;
 
 /**
- * TypeInfo implementation for Map types that may contain either simple elements,
- * records, lists, sets or nested mutable records as keys and values. This class
- * generates the necessary mutator methods for Maps, handling both simple and complex
- * nested mutation scenarios for both keys and values.
+ * Represents type information for a Map collection, extending {@link CollectionTypeInfo}.
+ * This class encapsulates metadata required to generate type-safe map mutator and constructor interfaces
+ * and functions, including key and value type information, mutator interfaces, and function types.
+ * It overrides parent methods to handle map-specific type parameterization.
+ *
+ * @see CollectionTypeInfo
+ * @see TypeInfo
+ * @see ClassName
+ * @see ParameterizedTypeName
  */
-public class MapTypeInfo extends SimpleTypeInfo implements TypeInfo {
-    private final static ClassName FUNCTION_CLASS_NAME = ClassName.get(Function.class);
-
+public class MapTypeInfo extends CollectionTypeInfo {
+    private final ClassName mutatorInterfaceClassName;
+    private final ClassName mutatorFunctionClassName;
+    private final TypeInfo keyTypeInfo;
     private final TypeInfo valueTypeInfo;
-    private final TypeName mutatorInterfaceTypeName; // Type of the mutator including generic parameters
-    private final ClassName mutatorImplementationClassName; // Mutator implementation class
-    private final TypeName mutatorFunctionTypeName; // Function used by the mutate function as parameter
-
     /**
-     * Constructs a MapTypeInfo with the given type information.
+     * Constructs a CollectionTypeInfo with the given type information.
      *
-     * @param typeName the TypeName of the Map component
-     * @param valueTypeInfo the TypeInfo for the values contained in the map
-     * @param mutatorInterfaceTypeName the TypeName of the mutator interface for this map
+     * @param typeName                       the TypeName of the collection component
+     * @param keyTypeInfo                    the TypeInfo for the key contained in the collection
+     * @param valueTypeInfo                  the TypeInfo for the value contained in the collection
+     * @param mutatorInterfaceClassName      the ClassName of the mutator interface for this map
      * @param mutatorImplementationClassName the ClassName of the mutator implementation for this map
-     * @param mutatorFunctionTypeName the TypeName of the function type used for mutation
+     * @param mutatorFunctionClassName       the ClassName of the function type used for mutation
      */
     public MapTypeInfo(
             TypeName typeName,
+            TypeInfo keyTypeInfo,
             TypeInfo valueTypeInfo,
-            TypeName mutatorInterfaceTypeName,
+            ClassName mutatorInterfaceClassName,
             ClassName mutatorImplementationClassName,
-            TypeName mutatorFunctionTypeName
+            ClassName mutatorFunctionClassName
     ) {
-        super(typeName);
+        super(typeName, valueTypeInfo, mutatorInterfaceClassName, mutatorImplementationClassName, mutatorFunctionClassName);
+        this.mutatorInterfaceClassName = mutatorInterfaceClassName;
+        this.mutatorFunctionClassName = mutatorFunctionClassName;
+        this.keyTypeInfo = keyTypeInfo;
         this.valueTypeInfo = valueTypeInfo;
-        this.mutatorInterfaceTypeName = mutatorInterfaceTypeName;
-        this.mutatorImplementationClassName = mutatorImplementationClassName;
-        this.mutatorFunctionTypeName = mutatorFunctionTypeName;
-    }
-
-    @Override
-    public boolean hasMutator() {
-        return true;
     }
 
     @Override
     public TypeName getMutatorInterfaceTypeName() {
-        return mutatorInterfaceTypeName;
+        if (valueTypeInfo.hasMutator()) {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName(),
+                    valueTypeInfo.getMutatorInterfaceTypeName(),
+                    valueTypeInfo.getMutatorInterfaceTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName());
+        }
     }
 
     @Override
-    public void contributeToMutator(
-            TypeSpec.Builder mutatorClassBuilder,
-            TypeName mutatorClassName,
-            String componentName,
-            TypeName recordMutatorInterfaceTypeName
-    ) {
-        super.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, recordMutatorInterfaceTypeName);
-
-        String fieldName = toFiledName(componentName);
-
-        CodeBlock.Builder mutatorCodeBlockbuilder = CodeBlock.builder();
-        mutatorCodeBlockbuilder.add(
-                "$T<$T,$T> factory = ",
-                FUNCTION_CLASS_NAME,
-                typeName,
-                mutatorInterfaceTypeName);
-        addMutatorFactoryCode(mutatorCodeBlockbuilder, 0);
-        mutatorCodeBlockbuilder
-                .add(";\n")
-                .addStatement("this.$N = mutateFunction.mutate(factory.apply(this.$N)).build()",
-                        fieldName, fieldName)
-                .addStatement("return this");
-
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("mutate", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordMutatorInterfaceTypeName)
-                .addParameter(
-                        mutatorFunctionTypeName,
-                        "mutateFunction")
-                .addCode(mutatorCodeBlockbuilder.build())
-                .build());
-
-        CodeBlock.Builder setterCodeBlockbuilder = CodeBlock.builder();
-        setterCodeBlockbuilder.add(
-                "$T<$T,$T> factory = ",
-                FUNCTION_CLASS_NAME,
-                typeName,
-                mutatorInterfaceTypeName);
-        addMutatorFactoryCode(setterCodeBlockbuilder, 0);
-        setterCodeBlockbuilder
-                .add(";\n")
-                .addStatement("this.$N = mutateFunction.mutate(factory.apply(null)).build()",
-                        fieldName)
-                .addStatement("return this");
-
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordMutatorInterfaceTypeName)
-                .addParameter(
-                        mutatorFunctionTypeName,
-                        "mutateFunction")
-                .addCode(setterCodeBlockbuilder.build())
-                .build());
-
+    public TypeName getFirstConstructorTypeName() {
+        if (!valueTypeInfo.hasMutator()) {
+            return null;
+        }
+        return ParameterizedTypeName.get(
+                mutatorInterfaceClassName,
+                keyTypeInfo.getTypeName(),
+                valueTypeInfo.getTypeName(),
+                valueTypeInfo.getFirstConstructorTypeName(),
+                valueTypeInfo.getLastConstructorTypeName());
     }
 
     @Override
-    public void addMutatorFactoryCode(CodeBlock.Builder codeBlockbuilder, int factoryMethodIndex) {
-        codeBlockbuilder.add("\nelement$L -> $T.mutator(element$L, ", factoryMethodIndex, mutatorImplementationClassName, factoryMethodIndex);
-        valueTypeInfo.addMutatorFactoryCode(codeBlockbuilder, factoryMethodIndex + 2);
-        codeBlockbuilder.add(")");
+    public TypeName getLastConstructorTypeName() {
+        if (!valueTypeInfo.hasMutator()) {
+            return null;
+        }
+        return ParameterizedTypeName.get(
+                mutatorInterfaceClassName,
+                keyTypeInfo.getTypeName(),
+                valueTypeInfo.getTypeName(),
+                valueTypeInfo.getFirstConstructorTypeName(),
+                valueTypeInfo.getLastConstructorTypeName());
+    }
+
+    /**
+     * Returns the TypeName of the constructor interface for this collection type.
+     *
+     * @return the TypeName of the constructor interface
+     */
+    public TypeName getConstructorInterfaceTypeName() {
+        if (valueTypeInfo.hasMutator()) {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName(),
+                    valueTypeInfo.getFirstConstructorTypeName(),
+                    valueTypeInfo.getLastConstructorTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorInterfaceClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName());
+        }
     }
 
     @Override
-    public void contributeToConstructor(
-            TypeSpec.Builder constructorClassBuilder,
-            TypeSpec.Builder constructorInterfaceBuilder,
-            TypeName mutatorClassName,
-            TypeName nextType,
-            String componentName
-    ) {
-        super.contributeToConstructor(constructorClassBuilder, constructorInterfaceBuilder, mutatorClassName, nextType,
-                componentName);
+    protected ParameterizedTypeName createMutatorFunctionParameterType() {
+        if (valueTypeInfo.hasMutator()) {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName(),
+                    valueTypeInfo.getMutatorInterfaceTypeName(),
+                    valueTypeInfo.getMutatorInterfaceTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName());
+        }
+    }
 
-        String fieldName = toFiledName(componentName);
-
-        CodeBlock.Builder codeBlockbuilder = CodeBlock.builder();
-        codeBlockbuilder.add(
-                "$T<$T,$T> factory = ",
-                FUNCTION_CLASS_NAME,
-                typeName,
-                mutatorInterfaceTypeName);
-        addMutatorFactoryCode(codeBlockbuilder, 0);
-        codeBlockbuilder
-                .add(";\n")
-                .addStatement("$T.this.$N = mutateFunction.mutate(factory.apply(null)).build()",
-                        mutatorClassName, fieldName)
-                .addStatement("return this");
-
-        constructorClassBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC)
-                .returns(nextType)
-                .addParameter(
-                        mutatorFunctionTypeName,
-                        "mutateFunction")
-                .addCode(codeBlockbuilder.build())
-                .build());
-
-
-        constructorInterfaceBuilder.addMethod(MethodSpec.methodBuilder(toMethodName("set", componentName))
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .returns(nextType)
-                .addParameter(
-                        mutatorFunctionTypeName,
-                        "mutateFunction")
-                .build());
+    @Override
+    protected ParameterizedTypeName createConstructorFunctionParameterType() {
+        if (valueTypeInfo.hasMutator()) {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName(),
+                    valueTypeInfo.getFirstConstructorTypeName(),
+                    valueTypeInfo.getLastConstructorTypeName());
+        } else {
+            return ParameterizedTypeName.get(
+                    mutatorFunctionClassName,
+                    keyTypeInfo.getTypeName(),
+                    valueTypeInfo.getTypeName());
+        }
     }
 
 }

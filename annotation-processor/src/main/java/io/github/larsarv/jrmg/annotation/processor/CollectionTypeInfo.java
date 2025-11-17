@@ -178,7 +178,13 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 returnTypeName);
     }
 
-    private ParameterizedTypeName createMutatorFunctionParameterType() {
+    /**
+     * Creates the ParameterizedTypeName for the mutator function parameter based on whether
+     * the element type has a mutator.
+     *
+     * @return the ParameterizedTypeName representing the mutator function parameter type
+     */
+    protected ParameterizedTypeName createMutatorFunctionParameterType() {
         if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,
@@ -192,7 +198,13 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
         }
     }
 
-    private ParameterizedTypeName createConstructorFunctionParameterType() {
+    /**
+     * Creates a ParameterizedTypeName representing the parameter type for a constructor function,
+     * based on whether the element type has a mutator.
+     *
+     * @return the ParameterizedTypeName for the constructor function parameter type
+     */
+    protected ParameterizedTypeName createConstructorFunctionParameterType() {
         if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(
                     mutatorFunctionClassName,

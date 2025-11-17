@@ -67,54 +67,48 @@ public Shipment updateShipmentWithNewParcel(Shipment originalShipment, Parcel pa
             .build();
 }
 ```
-Below is an example of using mutators as builder. Note the use off the `all()` function to give compile time error if not all 
+Below is an example of using mutators as builder. Note the use off the `constructor()`/`constructXyz()` functions to give compile time error if not all 
 component of the record is set in the order of declaration.
 ```
 public Shipment createShipmentTestData() {
-    return ShipmentMutator.mutator().all()
+    return ShipmentMutator.constructor()
             .setShipmentNo("SHP001")
             .setStatus(ShipmentStatus.CREATED)
-            .setParties(parties -> parties
-                    .put(PartyType.SENDER, party -> party.all()
+            .constructParties(parties -> parties
+                    .put(PartyType.SENDER, party -> party
                             .setName("Acme Corp")
-                            .setAddress(address -> address.all()
+                            .constructAddress(address -> address
                                     .setAddress1("123 Main St")
                                     .setAddress2(null)
                                     .setCity("Anytown")
                                     .setState("ST")
                                     .setPostalCode("12345")
-                                    .setCountry("US")
-                                    .done())
-                            .setContactInfo(contactInfos -> contactInfos
-                                    .add(contactInfo -> contactInfo.all()
+                                    .setCountry("US"))
+                            .constructContactInfo(contactInfos -> contactInfos
+                                    .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.EMAIL)
-                                            .setValue("contact@acme.com")
-                                            .done())
-                                    .add(contactInfo -> contactInfo.all()
+                                            .setValue("contact@acme.com"))
+                                    .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.PHONE)
-                                            .setValue("555-1234")
-                                            .done()))
-                            .done()) // Remove done?
-                    .put(PartyType.RECEIVER, party -> party.all()
+                                            .setValue("555-1234"))))
+                    .put(PartyType.RECEIVER, party -> party
                             .setName("John Doe")
-                            .setAddress(address -> address.all()
+                            .constructAddress(address -> address
                                     .setAddress1("456 Oak Ave")
                                     .setAddress2(null)
                                     .setCity("Somewhere")
                                     .setState("CA")
                                     .setPostalCode("67890")
-                                    .setCountry("US")
-                                    .done())
-                            .setContactInfo(contactInfos -> contactInfos
+                                    .setCountry("US"))
+                            .constructContactInfo(contactInfos -> contactInfos
                                     .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.EMAIL)
                                             .setValue("john.doe@example.com"))
                                     .add(contactInfo -> contactInfo
                                             .setType(ContactInfoType.PHONE)
-                                            .setValue("555-5678")))
-                            .done()))
-            .setParcels(parcels -> parcels
-                    .add(parcel -> parcel.all()
+                                            .setValue("555-5678")))))
+            .constructParcels(parcels -> parcels
+                    .add(parcel -> parcel
                             .setParcelNo("PARCEL001")
                             .setWeight(new BigDecimal("2.5"))
                             .setLength(new BigDecimal("10.0"))
@@ -123,25 +117,24 @@ public Shipment createShipmentTestData() {
                             .setDescription("Sample Package")
                             .setContents(List.of())
                             .setType(ParcelType.EXPRESS)
-                            .setStatus(ParcelStatus.CREATED)
-                            .done()))
-            .setProformaInvoice(proformaInvoice -> proformaInvoice.all()
+                            .setStatus(ParcelStatus.CREATED)))
+            .constructProformaInvoice(proformaInvoice -> proformaInvoice
                     .setInvoiceNo("INV001")
                     .setDescription("Sample Invoice")
                     .setLineItemPrices(prices -> prices)
-                    .setLineItemDescriptions(description -> description)
+                    .setLineItemDescriptions(lineItemDescriptions -> lineItemDescriptions)
                     .setQuantities(quantities -> quantities)
                     .setTaxCodes(taxCodes -> taxCodes)
                     .setTotalAmount(new BigDecimal("100.00"))
                     .setIssueDate(LocalDateTime.now())
-                    .setCustomFields(customFields -> customFields)
-                    .done())
+                    .setCustomFields(customFields -> customFields))
             .setSpecialInstructions(specialInstructions -> specialInstructions
                     .add("Handle with care")
                     .add("Fragile"))
             .setCreatedDate(LocalDateTime.now())
             .setEstimatedDeliveryDate(LocalDateTime.now().plusDays(5))
-            .done().build();
+            .build();
+}
 }
 ```
 

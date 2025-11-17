@@ -4,6 +4,12 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A mutator interface for nested maps that allows fluent, chainable modifications to key-value pairs.
+ *
+ * @param <K> the type of keys in the map
+ * @param <V> the type of values in the map
+ */
 public interface NestedMapMutator<K, V, MFP, MFR extends Builder<V>> extends SimpleMapMutator<K, V> {
     @Override
     NestedMapMutator<K, V, MFP, MFR> put(K key, V value);
