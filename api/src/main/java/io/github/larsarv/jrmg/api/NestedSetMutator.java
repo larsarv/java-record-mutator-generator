@@ -14,20 +14,21 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable set of the modified records.
  *
- * @param <T> the type the set element.
- * @param <M> the type of record mutator used to modify the record
+ * @param <E> the type of elements stored in the set.
+ * @param <MFP> the type of the mutate function parameter.
+ * @param <MFR> the return type mutate function.
  */
-public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetMutator<T> {
+public interface NestedSetMutator<E, MFP, MFR extends Builder<E>> extends SimpleSetMutator<E> {
     @Override
-    NestedSetMutator<T, U, M> add(T record);
+    NestedSetMutator<E, MFP, MFR> add(E record);
     @Override
-    NestedSetMutator<T, U, M> remove(T record);
+    NestedSetMutator<E, MFP, MFR> remove(E record);
     @Override
-    NestedSetMutator<T, U, M> filter(Predicate<T> filterFunction);
+    NestedSetMutator<E, MFP, MFR> filter(Predicate<E> filterFunction);
     @Override
-    NestedSetMutator<T, U, M> update(T item, SimpleFunction<T> mutateFunction);
+    NestedSetMutator<E, MFP, MFR> update(E item, SimpleFunction<E> mutateFunction);
     @Override
-    NestedSetMutator<T, U, M> updateAll(SimpleFunction<T> mutateFunction);
+    NestedSetMutator<E, MFP, MFR> updateAll(SimpleFunction<E> mutateFunction);
 
     /**
      * Adds a new element to the end of the set using the provided mutator function.
@@ -36,7 +37,7 @@ public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetM
      * @param mutateFunction the mutator function used to create the element to be added
      * @return this mutator instance for method chaining
      */
-    NestedSetMutator<T, U, M> add(Function<U, M> mutateFunction);
+    NestedSetMutator<E, MFP, MFR> add(Function<MFP, MFR> mutateFunction);
 
     /**
      * Mutates a specific item in the set using the provided mutator function.
@@ -50,7 +51,7 @@ public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetM
      * @param mutateFunction the function that takes a mutator for the item and returns a mutated version
      * @return a new mutator instance with the item mutated according to the provided function
      */
-    NestedSetMutator<T, U, M> mutate(T item, Function<U, M> mutateFunction);
+    NestedSetMutator<E, MFP, MFR> mutate(E item, Function<MFP, MFR> mutateFunction);
 
     /**
      * Mutates all records in the set using the provided function.
@@ -59,7 +60,7 @@ public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetM
      * @param mutateFunction the function to apply to each record
      * @return a new mutator instance with all records mutated according to the provided function
      */
-    NestedSetMutator<T, U, M> mutateAll(Function<U, M> mutateFunction);
+    NestedSetMutator<E, MFP, MFR> mutateAll(Function<MFP, MFR> mutateFunction);
 
     /**
      * Finalizes the mutable set and returns an immutable copy.
@@ -69,5 +70,5 @@ public interface NestedSetMutator<T, U, M extends Builder<T>> extends SimpleSetM
      *
      * @return a set containing the final state of all records after applying all mutations
      */
-    Set<T> build();
+    Set<E> build();
 }

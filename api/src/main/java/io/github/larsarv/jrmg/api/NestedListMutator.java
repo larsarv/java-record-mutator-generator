@@ -11,26 +11,27 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes the mutations and returns an immutable list of the modified records.
  *
- * @param <T> the type the list element.
- * @param <M> the type of record mutator used to modify the record
+ * @param <E> the type of elements stored in the list.
+ * @param <MFP> the type of the mutate function parameter.
+ * @param <MFR> the return type mutate function.
  */
-public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleListMutator<T> {
+public interface NestedListMutator<E, MFP, MFR extends Builder<E>> extends SimpleListMutator<E> {
     @Override
-    T get(int index);
+    E get(int index);
     @Override
-    NestedListMutator<T, U, M> set(int index, T record);
+    NestedListMutator<E, MFP, MFR> set(int index, E record);
     @Override
-    NestedListMutator<T, U, M> add(T item);
+    NestedListMutator<E, MFP, MFR> add(E item);
     @Override
-    NestedListMutator<T, U, M> remove(int index);
+    NestedListMutator<E, MFP, MFR> remove(int index);
     @Override
-    NestedListMutator<T, U, M> filter(Predicate<T> filterFunction);
+    NestedListMutator<E, MFP, MFR> filter(Predicate<E> filterFunction);
     @Override
-    NestedListMutator<T, U, M> updateAll(IndexedFunction<T, T> mutateFunction);
+    NestedListMutator<E, MFP, MFR> updateAll(IndexedFunction<E, E> mutateFunction);
     @Override
-    NestedListMutator<T, U, M> sort(Comparator<? super T> comparator);
+    NestedListMutator<E, MFP, MFR> sort(Comparator<? super E> comparator);
     @Override
-    NestedListMutator<T, U, M> move(int fromIndex, int toIndex);
+    NestedListMutator<E, MFP, MFR> move(int fromIndex, int toIndex);
 
     /**
      * Adds a new element to the end of the list using the provided mutator function.
@@ -39,7 +40,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutateFunction the mutator function used to create the element to be added
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> add(Function<U, M> mutateFunction);
+    NestedListMutator<E, MFP, MFR> add(Function<MFP, MFR> mutateFunction);
 
     /**
      * Sets the element at the specified index using the provided mutator.
@@ -49,7 +50,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutator the mutator used to create the new record value
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> set(int index, M mutator);
+    NestedListMutator<E, MFP, MFR> set(int index, MFR mutator);
 
     /**
      * Mutates the element at the specified index using the provided function.
@@ -58,7 +59,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutateFunction the function that transforms the element
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> mutate(int index, Function<U, M> mutateFunction);
+    NestedListMutator<E, MFP, MFR> mutate(int index, Function<MFP, MFR> mutateFunction);
 
     /**
      * Mutates all elements in the list using the provided indexed function.
@@ -68,7 +69,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutateFunction the function to apply to each element, taking its index and the element itself
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> mutateAll(IndexedFunction<U, M> mutateFunction);
+    NestedListMutator<E, MFP, MFR> mutateAll(IndexedFunction<MFP, MFR> mutateFunction);
 
     /**
      * Finds the first element matching the given predicate and apply a mutation on it.
@@ -80,7 +81,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutateFunction the function used to mutate the found element
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> findFirstAndMutate(Predicate<T> predicate, Function<U, M> mutateFunction);
+    NestedListMutator<E, MFP, MFR> findFirstAndMutate(Predicate<E> predicate, Function<MFP, MFR> mutateFunction);
 
     /**
      * Finds all elements matching the given predicate and applies a mutation on it.
@@ -94,7 +95,7 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      * @param mutateFunction the function used to mutate each matching element
      * @return this mutator instance for method chaining
      */
-    NestedListMutator<T, U, M> findAllAndMutate(Predicate<T> predicate, Function<U, M> mutateFunction);
+    NestedListMutator<E, MFP, MFR> findAllAndMutate(Predicate<E> predicate, Function<MFP, MFR> mutateFunction);
 
     /**
      * Finalizes the mutable list and returns an immutable copy.
@@ -104,5 +105,5 @@ public interface NestedListMutator<T, U, M extends Builder<T>> extends SimpleLis
      *
      * @return a list containing the final state of all elements after applying all mutations
      */
-    List<T> build();
+    List<E> build();
 }

@@ -13,9 +13,9 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes all mutations and returns an immutable list.
  *
- * @param <T> the type of elements in the list
+ * @param <E> the type of elements in the list
  */
-public interface SimpleListMutator<T> extends Builder<List<T>> {
+public interface SimpleListMutator<E> extends Builder<List<E>> {
     /**
      * Returns the number of elements in the list.
      *
@@ -29,7 +29,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param index the index of the element to return
      * @return the element at the specified index
      */
-    T get(int index);
+    E get(int index);
 
     /**
      * Sets the element at the specified index in the list to the given record.
@@ -43,7 +43,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param record the new element to set at the specified index
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> set(int index, T record);
+    SimpleListMutator<E> set(int index, E record);
 
     /**
      * Adds the specified item to add the end of the list.
@@ -54,7 +54,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param item the item to add to the list
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> add(T item);
+    SimpleListMutator<E> add(E item);
 
     /**
      * Removes the element at the specified index from the list.
@@ -67,7 +67,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param index the index of the element to remove
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> remove(int index);
+    SimpleListMutator<E> remove(int index);
 
     /**
      * Filters the list by removing elements that do not satisfy the given predicate.
@@ -81,7 +81,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param filterFunction the predicate used to determine whether an element should be retained
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> filter(Predicate<T> filterFunction);
+    SimpleListMutator<E> filter(Predicate<E> filterFunction);
 
     /**
      * Applies the given mutation function to all elements in the list.
@@ -94,7 +94,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param indexedMutateFunction the function to apply to each element, accepting its index and the current element, returning the modified element
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> updateAll(IndexedFunction<T, T> indexedMutateFunction);
+    SimpleListMutator<E> updateAll(IndexedFunction<E, E> indexedMutateFunction);
 
     /**
      * Sorts the elements of the list in place according to the provided comparator.
@@ -109,7 +109,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param comparator the comparator to determine the order of the list
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> sort(Comparator<? super T> comparator);
+    SimpleListMutator<E> sort(Comparator<? super E> comparator);
 
     /**
      * Moves an element from one index to another in the list.
@@ -123,7 +123,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @param toIndex the index to move the element to
      * @return this mutator instance for method chaining
      */
-    SimpleListMutator<T> move(int fromIndex, int toIndex);
+    SimpleListMutator<E> move(int fromIndex, int toIndex);
 
     /**
      * Finalizes the mutable list and returns an immutable copy.
@@ -134,7 +134,7 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      * @return an immutable list containing the current elements
      */
     @Override
-    List<T> build();
+    List<E> build();
 
     /**
      * Finalizes the mutable list and returns an immutable copy.
@@ -144,6 +144,6 @@ public interface SimpleListMutator<T> extends Builder<List<T>> {
      *
      * @return an immutable list containing the current elements
      */
-    List<T> buildCopy();
+    List<E> buildCopy();
 
 }

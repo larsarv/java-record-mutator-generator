@@ -12,9 +12,9 @@ import java.util.function.Predicate;
  * <p>
  * The {@link #build()} method finalizes all mutations and returns an immutable set.
  *
- * @param <T> the type of elements in the set
+ * @param <E> the type of elements in the set
  */
-public interface SimpleSetMutator<T> extends Builder<Set<T>> {
+public interface SimpleSetMutator<E> extends Builder<Set<E>> {
     /**
      * Returns the number of elements in the set.
      *
@@ -30,7 +30,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param element the element to check for containment
      * @return true if the set contains the element, false otherwise
      */
-    boolean contains(T element);
+    boolean contains(E element);
 
     /**
      * Adds the specified record to the set.
@@ -43,7 +43,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param record the element to add to the set
      * @return this mutator instance for method chaining
      */
-    SimpleSetMutator<T> add(T record);
+    SimpleSetMutator<E> add(E record);
 
     /**
      * Removes the specified record from the set.
@@ -56,7 +56,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param record the element to remove from the set
      * @return this mutator instance for method chaining
      */
-    SimpleSetMutator<T> remove(T record);
+    SimpleSetMutator<E> remove(E record);
 
     /**
      * Filters the set by removing elements that do not satisfy the given predicate.
@@ -70,7 +70,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param filterFunction the predicate used to determine whether an element should be retained
      * @return this mutator instance for method chaining
      */
-    SimpleSetMutator<T> filter(Predicate<T> filterFunction);
+    SimpleSetMutator<E> filter(Predicate<E> filterFunction);
 
 
     /**
@@ -86,7 +86,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param mutateFunction the function to apply to the item, accepting the current item and returning the modified item
      * @return this mutator instance for method chaining
      */
-    SimpleSetMutator<T> update(T item, SimpleFunction<T> mutateFunction);
+    SimpleSetMutator<E> update(E item, SimpleFunction<E> mutateFunction);
 
     /**
      * Applies the given mutation function to all elements in the set.
@@ -98,7 +98,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @param mutateFunction the function to apply to each element, accepting the current element, returning the modified element
      * @return this mutator instance for method chaining
      */
-    SimpleSetMutator<T> updateAll(SimpleFunction<T> mutateFunction);
+    SimpleSetMutator<E> updateAll(SimpleFunction<E> mutateFunction);
 
     /**
      * Finalizes the mutable set and returns an immutable copy.
@@ -109,7 +109,7 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      * @return an immutable set containing the current elements
      */
     @Override
-    Set<T> build();
+    Set<E> build();
 
     /**
      * Finalizes the mutable list and returns an immutable copy.
@@ -119,5 +119,5 @@ public interface SimpleSetMutator<T> extends Builder<Set<T>> {
      *
      * @return an immutable list containing the current elements
      */
-    Set<T> buildCopy();
+    Set<E> buildCopy();
 }

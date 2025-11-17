@@ -8,16 +8,17 @@ package io.github.larsarv.jrmg.api;
  * <p>
  * This interface is used by generated record mutators.
  *
- * @param <T> the type of records managed by the mutator
- * @param <M> the type of record mutator used to create or mutate the record
+ * @param <E> the type of elements stored in the set.
+ * @param <MFP> the type of the mutate function parameter.
+ * @param <MFR> the return type mutate function.
  */
 @FunctionalInterface
-public interface NestedSetMutateFunction<T, U, M extends Builder<T>> {
+public interface NestedSetMutateFunction<E, MFP, MFR extends Builder<E>> {
     /**
      * Applies a mutation operation with the provided {@link NestedSetMutator} instance.
      *
      * @param mutator the mutator instance to be mutated
      * @return a modified version of the mutator instance with applied mutations
      */
-    NestedSetMutator<T, U, M> mutate(NestedSetMutator<T, U, M> mutator);
+    NestedSetMutator<E, MFP, MFR> mutate(NestedSetMutator<E, MFP, MFR> mutator);
 }

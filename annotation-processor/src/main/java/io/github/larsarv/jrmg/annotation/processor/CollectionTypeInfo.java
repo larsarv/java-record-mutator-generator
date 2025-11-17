@@ -86,6 +86,11 @@ public class CollectionTypeInfo extends SimpleTypeInfo implements TypeInfo {
                 elementTypeInfo.getLastConstructorTypeName());
     }
 
+    /**
+     * Returns the TypeName of the constructor interface for this collection type.
+     *
+     * @return the TypeName of the constructor interface
+     */
     public TypeName getConstructorInterfaceTypeName() {
         if (elementTypeInfo.hasMutator()) {
             return ParameterizedTypeName.get(

@@ -10,15 +10,15 @@ package io.github.larsarv.jrmg.api;
  * The interface is {@link FunctionalInterface} and can be used with lambda expressions
  * or method references for concise mutation composition.
  *
- * @param <T> the type of elements in the set being mutated
+ * @param <E> the type of elements in the set being mutated
  */
 @FunctionalInterface
-public interface SimpleSetMutateFunction<T> {
+public interface SimpleSetMutateFunction<E> {
     /**
      * Applies a mutation operation with the provided {@link SimpleSetMutator} instance.
      *
      * @param mutator the mutator instance to be mutated
      * @return a modified version of the mutator instance with applied mutations
      */
-    SimpleSetMutator<T> mutate(SimpleSetMutator<T> mutator);
+    SimpleSetMutator<E> mutate(SimpleSetMutator<E> mutator);
 }
