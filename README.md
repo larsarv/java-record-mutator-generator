@@ -135,7 +135,6 @@ public Shipment createShipmentTestData() {
             .setEstimatedDeliveryDate(LocalDateTime.now().plusDays(5))
             .build();
 }
-}
 ```
 
 ## Maven Setup
