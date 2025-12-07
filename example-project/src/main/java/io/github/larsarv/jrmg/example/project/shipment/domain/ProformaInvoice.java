@@ -1,6 +1,7 @@
 package io.github.larsarv.jrmg.example.project.shipment.domain;
 
-import io.github.larsarv.jrmg.api.GenerateMutator;
+import io.github.larsarv.jrmg.api.GenerateCtor;
+import io.github.larsarv.jrmg.api.GenerateMtor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -8,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@GenerateMutator
+@GenerateCtor
+@GenerateMtor
 public record ProformaInvoice(
         String invoiceNo,
         String description,

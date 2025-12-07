@@ -15,7 +15,7 @@ public interface IndexedFunction<T, R> {
      * or a new instance if the transformation alters the item's state.
      *
      * @param index the position of the item in the collection being modified
-     * @param item the item to be transformed
+     * @param item  the item to be transformed
      * @return the transformed item
      */
     R apply(int index, T item);

@@ -1,12 +1,13 @@
 package io.github.larsarv.jrmg.example.project.shipment.domain;
 
-import io.github.larsarv.jrmg.api.GenerateMutator;
+import io.github.larsarv.jrmg.api.GenerateCtor;
+import io.github.larsarv.jrmg.api.GenerateMtor;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
-@GenerateMutator
+@GenerateCtor
+@GenerateMtor
 public record Parcel(
         String parcelNo,
         BigDecimal weight,

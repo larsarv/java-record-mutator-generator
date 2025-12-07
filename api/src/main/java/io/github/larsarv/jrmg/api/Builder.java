@@ -1,7 +1,7 @@
 package io.github.larsarv.jrmg.api;
 
 /**
- * A functional interface implemented by all mutators.
+ * A functional interface implemented by all mutators and constructors.
  * Implementations provide a fluent API to mutate and ultimately build a new instance.
  *
  * @param <T> the type of record being built

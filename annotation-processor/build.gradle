@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'org.jreleaser' version '1.17.0'
+    id 'org.jreleaser' version '1.21.0'
 }
 
 group = 'io.github.larsarv.jrmg'
@@ -89,7 +89,8 @@ jreleaser {
         }
     }
     release {
-        github {0
+        github {
+            0
             enabled = false
         }
     }

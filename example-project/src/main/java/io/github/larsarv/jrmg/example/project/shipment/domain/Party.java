@@ -1,12 +1,12 @@
 package io.github.larsarv.jrmg.example.project.shipment.domain;
 
-import io.github.larsarv.jrmg.api.GenerateMutator;
+import io.github.larsarv.jrmg.api.GenerateCtor;
+import io.github.larsarv.jrmg.api.GenerateMtor;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-@GenerateMutator
+@GenerateCtor
+@GenerateMtor
 public record Party(
         String name,
         Address address,

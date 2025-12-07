@@ -4,11 +4,11 @@ import io.github.larsarv.jrmg.example.project.shipment.domain.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
 public class Example {
     public Shipment updateParcelStatus(Shipment shipment, String parcelNo, ParcelStatus parcelStatus) {
-        return ShipmentMutator.mutator(shipment)
+        return ShipmentMtor.mutator(shipment)
                 .mutateParcels(parcels -> parcels
                         .findFirstAndMutate(parcel -> parcelNo.equals(parcel.parcelNo()), parcel -> parcel
                                 .setStatus(parcelStatus)))
@@ -16,16 +16,16 @@ public class Example {
     }
 
     public Shipment updateShipmentWithNewParcel(Shipment originalShipment, Parcel parcel) {
-        return ShipmentMutator.mutator(originalShipment)
+        return ShipmentMtor.mutator(originalShipment)
                 .mutateParcels(parcels -> parcels
-                        .add(ParcelMutator.mutator(parcel)
+                        .add(ParcelMtor.mutator(parcel)
                                 .setStatus(ParcelStatus.CREATED)
                                 .build()))
                 .build();
     }
 
     public Shipment createShipmentTestData() {
-        return ShipmentMutator.constructor()
+        return ShipmentCtor.constructor()
                 .setShipmentNo("SHP001")
                 .setStatus(ShipmentStatus.CREATED)
                 .constructParties(parties -> parties
@@ -75,14 +75,15 @@ public class Example {
                 .constructProformaInvoice(proformaInvoice -> proformaInvoice
                         .setInvoiceNo("INV001")
                         .setDescription("Sample Invoice")
-                        .setLineItemPrices(prices -> prices)
-                        .setLineItemDescriptions(lineItemDescriptions -> lineItemDescriptions)
-                        .setQuantities(quantities -> quantities)
-                        .setTaxCodes(taxCodes -> taxCodes)
+                        .constructLineItemPrices(prices -> prices)
+                        .constructLineItemDescriptions(lineItemDescriptions -> lineItemDescriptions)
+                        .constructQuantities(quantities -> quantities
+                                .put("test", 10))
+                        .constructTaxCodes(taxCodes -> taxCodes)
                         .setTotalAmount(new BigDecimal("100.00"))
                         .setIssueDate(LocalDateTime.now())
-                        .setCustomFields(customFields -> customFields))
-                .setSpecialInstructions(specialInstructions -> specialInstructions
+                        .constructCustomFields(customFields -> customFields))
+                .constructSpecialInstructions(specialInstructions -> specialInstructions
                         .add("Handle with care")
                         .add("Fragile"))
                 .setCreatedDate(LocalDateTime.now())

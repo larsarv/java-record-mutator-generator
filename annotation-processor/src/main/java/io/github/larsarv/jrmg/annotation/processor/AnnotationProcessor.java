@@ -1,44 +1,45 @@
 package io.github.larsarv.jrmg.annotation.processor;
 
 import com.google.auto.service.AutoService;
-import com.palantir.javapoet.*;
-import io.github.larsarv.jrmg.api.*;
+import io.github.larsarv.jrmg.annotation.processor.type.manager.TypeManagerFactory;
+import io.github.larsarv.jrmg.api.GenerateCtor;
+import io.github.larsarv.jrmg.api.GenerateCtorAndMtor;
+import io.github.larsarv.jrmg.api.GenerateMtor;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Set;
 
 /**
- * AnnotationProcessor is a custom annotation processor designed to generate mutator classes for records annotated with
- * {@link io.github.larsarv.jrmg.api.GenerateMutator}. It processes annotations at compile time and generates appropriate
- * mutator implementations based on the annotated record type.
- * <p>
- * The generated mutator has setters and getters for the record's component and supports mutation for three types of
- * record components:
- * <ul>
- * <li>Components that are records annotated with {@link io.github.larsarv.jrmg.api.GenerateMutator}</li>
- * <li>Components that are of type {@code java.util.List} with elements that are records annotated with
- * {@link io.github.larsarv.jrmg.api.GenerateMutator} through a {@code MutableRecordListMutator}</li>
- * <li>Components that are of type {@code java.util.List} with elements that are of other types through a
- * {@code SimpleListMutator}</li>
- * </ul>
- * <p>
- * The processor inspects annotated elements, validates that they are records, and generates corresponding mutator classes.
+ * AnnotationProcessor is a custom annotation processor designed to generate mutator and constructor classes for records annotated with
+ * {@link GenerateMtor} and {@link GenerateCtor}. It processes annotations at compile time and generates appropriate
+ * implementations based on the annotated record type.
  */
-@SupportedAnnotationTypes("io.github.larsarv.jrmg.api.*")
+@SupportedAnnotationTypes({
+        "io.github.larsarv.jrmg.api.GenerateMtor",
+        "io.github.larsarv.jrmg.api.GenerateCtor",
+        "io.github.larsarv.jrmg.api.GenerateCtorAndMtor"
+})
 @AutoService(Processor.class)
 public class AnnotationProcessor extends AbstractProcessor {
-    private static final String GENERATE_MUTATOR_CLASS_NAME = GenerateMutator.class.getName();
+    private static final String GENERATE_MTOR_CLASS_NAME = GenerateMtor.class.getName();
+    private static final String GENERATE_CTOR_CLASS_NAME = GenerateCtor.class.getName();
+    private static final String GENERATE_CTOR_AND_MTOR_CLASS_NAME = GenerateCtorAndMtor.class.getName();
 
-    private TypeElement generateMutatorTypeElement;
-    private TypeInfoFactory mutatorTypeInfoFactory;
+    private TypeElement generateMtorTypeElement;
+    private TypeElement generateCtorTypeElement;
+    private TypeElement generateCtorAndMtorTypeElement;
+    private MtorGenerator mtorGenerator;
+    private CtorGenerator ctorGenerator;
 
     /**
-     * Constructor for the AnnotationProcessor.
+     * Default constructor for the AnnotationProcessor.
+     * <p>
+     * This constructor is required by the service loader mechanism to instantiate the processor.
      */
     public AnnotationProcessor() {
     }
@@ -51,14 +52,16 @@ public class AnnotationProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
-        generateMutatorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_MUTATOR_CLASS_NAME);
-        mutatorTypeInfoFactory = new TypeInfoFactory(processingEnv);
+        generateMtorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_MTOR_CLASS_NAME);
+        generateCtorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_CTOR_CLASS_NAME);
+        generateCtorAndMtorTypeElement = processingEnv.getElementUtils().getTypeElement(GENERATE_CTOR_AND_MTOR_CLASS_NAME);
+        TypeManagerFactory factory = TypeManagerFactory.createTypeManager(processingEnv);
+        mtorGenerator = new MtorGenerator(processingEnv, factory);
+        ctorGenerator = new CtorGenerator(processingEnv, factory);
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        //printMessage(Diagnostic.Kind.NOTE,"Java Record Mutator Generator annotation processor invoked.");
-
         for (TypeElement annotation : annotations) {
             if (annotation.getKind() != ElementKind.ANNOTATION_TYPE) {
                 continue;
@@ -70,249 +73,49 @@ public class AnnotationProcessor extends AbstractProcessor {
             for (Element element : annotatedElements) {
                 processElement(annotation, element);
             }
-
         }
 
         return true;
     }
 
     private void processElement(TypeElement annotation, Element element) {
-        if (processingEnv.getTypeUtils().isSameType(
-                annotation.asType(),
-                generateMutatorTypeElement.asType())
-        ) {
+        if (element.getKind() != ElementKind.RECORD) {
+            printMessage(Diagnostic.Kind.ERROR, element.getSimpleName() + " annotation is only valid for records.", element);
+            return;
+        }
+        if (shouldGenerateMtor(annotation)) {
             TypeElement typeElement = (TypeElement) element;
-            // Make sure the annotation is on a record
-            if (element.getKind() != ElementKind.RECORD) {
-                printMessage(Diagnostic.Kind.ERROR, "GenerateMutator annotation is only valid for records.", element);
-                return;
-            }
-            processGenerateMutator(typeElement);
+            mtorGenerator.process(typeElement);
+        }
+        if (shouldGenerateCtor(annotation)) {
+            TypeElement typeElement = (TypeElement) element;
+            ctorGenerator.process(typeElement);
         }
     }
 
-    private void processGenerateMutator(TypeElement recordElement) {
-
-        PackageElement recordElementPackageElement = processingEnv.getElementUtils().getPackageOf(recordElement);
-        String recordElementPackageName = recordElementPackageElement.getQualifiedName().toString();
-        ClassName mutatorClassName = ClassName.get(recordElementPackageName, recordElement.getSimpleName() + "Mutator");
-        ClassName recordClassName = ClassName.get(recordElement);
-
-        TypeSpec.Builder mutatorClassBuilder = TypeSpec.classBuilder(mutatorClassName)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Builder.class), recordClassName))
-                .addModifiers(Modifier.PUBLIC);
-
-
-        addConstructor(mutatorClassBuilder, recordElement, recordClassName);
-        addMutatorComponentMethods(mutatorClassBuilder, recordElement, mutatorClassName);
-        addConstructorComponentMethods(mutatorClassBuilder, recordElement, mutatorClassName);
-        addFactoryMethods(mutatorClassBuilder, recordElement, mutatorClassName, recordClassName);
-        addBuildMethod(recordElement, mutatorClassBuilder, recordClassName);
-
-        JavaFile javaFile = JavaFile.builder(recordElementPackageName, mutatorClassBuilder.build())
-                .build();
-
-        try {
-            javaFile.writeTo(processingEnv.getFiler());
-        } catch (IOException e) {
-            printMessage(Diagnostic.Kind.ERROR, e.getMessage(), recordElement);
-        }
+    private boolean shouldGenerateMtor(TypeElement annotation) {
+        return isSameType(annotation, generateMtorTypeElement)
+                || isSameType(annotation, generateCtorAndMtorTypeElement);
     }
 
-    private static String getFirstComponentName(TypeElement recordElement) {
-        if (recordElement.getRecordComponents().isEmpty()) {
-            return null;
-        }
-        return recordElement.getRecordComponents().get(0).getSimpleName().toString();
+    private boolean shouldGenerateCtor(TypeElement annotation) {
+        return isSameType(annotation, generateCtorTypeElement)
+                || isSameType(annotation, generateCtorAndMtorTypeElement);
     }
 
-    private void addMutatorComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, ClassName mutatorClassName) {
-        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
-            String componentName = recordComponentElement.getSimpleName().toString();
-
-            TypeInfo typeInfo = mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType());
-            typeInfo.contributeToMutator(mutatorClassBuilder, mutatorClassName, componentName, mutatorClassName);
-        }
+    private boolean isSameType(TypeElement annotation, TypeElement generateMutatorTypeElement) {
+        return processingEnv.getTypeUtils().isSameType(
+                annotation.asType(),
+                generateMutatorTypeElement.asType());
     }
 
-    private void addConstructorComponentMethods(TypeSpec.Builder mutatorClassBuilder, TypeElement recordElement, ClassName mutatorClassName) {
-        TypeSpec.Builder constructorClassBuilder = TypeSpec.classBuilder("Constructor")
-                .addModifiers(Modifier.PRIVATE);
-
-        TypeName recordTypeName = TypeName.get(recordElement.asType());
-        TypeName lastType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), "ConstructorDone");
-        TypeName prevType = lastType;
-        constructorClassBuilder
-                .superclass(prevType)
-                .addMethod(MethodSpec.methodBuilder("done")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(mutatorClassName)
-                        .addStatement("return $T.this", mutatorClassName)
-                        .build());
-
-        List<RecordComponentElement> reverseComponentList = new ArrayList<>(recordElement.getRecordComponents());
-        Collections.reverse(reverseComponentList);
-        for (RecordComponentElement recordComponentElement : reverseComponentList) {
-            String componentName = recordComponentElement.getSimpleName().toString();
-            TypeSpec.Builder constructorInterfaceBuilder = TypeSpec.interfaceBuilder(toConstructorInterfaceName(componentName))
-                    .addModifiers(Modifier.PUBLIC);
-
-            mutatorTypeInfoFactory.createTypeInfo(recordComponentElement.asType())
-                    .contributeToConstructor(
-                        constructorClassBuilder,
-                        constructorInterfaceBuilder,
-                        mutatorClassName,
-                        prevType,
-                        componentName);
-
-            TypeSpec setterInterface = constructorInterfaceBuilder.build();
-
-            prevType = ClassName.get(mutatorClassName.packageName(), mutatorClassName.simpleName(), setterInterface.name());
-            constructorClassBuilder.addSuperinterface(prevType);
-            mutatorClassBuilder.addType(setterInterface);
-        }
-
-        mutatorClassBuilder
-                .addType(constructorClassBuilder.build())
-                .addType(createConstructorDoneTypeSpec(mutatorClassName, recordTypeName))
-                .addMethod(createConstructMethodSpec(mutatorClassName, prevType, lastType));
-    }
-
-    private static MethodSpec createConstructMethodSpec(ClassName mutatorClassName, TypeName prevType, TypeName lastType) {
-        return MethodSpec.methodBuilder("construct")
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(
-                        ParameterizedTypeName.get(
-                                ClassName.get(Function.class),
-                                prevType,
-                                lastType
-                        ),
-                        "constructorFunction")
-                .returns(mutatorClassName)
-                .addStatement("constructorFunction.apply(new Constructor())")
-                .addStatement("return $T.this", mutatorClassName)
-                .build();
-    }
-
-    private static TypeSpec createConstructorDoneTypeSpec(ClassName mutatorClassName, TypeName recordTypeName) {
-        return TypeSpec.classBuilder("ConstructorDone")
-                .addModifiers(Modifier.PUBLIC)
-                .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Builder.class), recordTypeName))
-                .addMethod(MethodSpec.constructorBuilder()
-                        .addModifiers(Modifier.PRIVATE)
-                        .build())
-                .addMethod(MethodSpec.methodBuilder("build")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(recordTypeName)
-                        .addStatement("return $T.this.build()", mutatorClassName)
-                        .build())
-                .build();
-    }
-
-    private String toConstructorInterfaceName(String componentName) {
-        return componentName.substring(0, 1).toUpperCase(Locale.ROOT)
-                + componentName.substring(1)
-                + "ConstructorSetter";
-    }
-
-    private static void addBuildMethod(
-            TypeElement recordElement,
-            TypeSpec.Builder mutatorClassBuilder,
-            ClassName recordClassName
-    ) {
-        List<String> fieldNameList = creteFieldNameList(recordElement);
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("build")
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(recordClassName)
-                .addStatement("return new $T($L)", recordClassName, String.join(", ", fieldNameList))
-                .build());
-    }
-
-    private void addFactoryMethods(
-            TypeSpec.Builder mutatorClassBuilder,
-            TypeElement recordElement,
-            ClassName mutatorClassName,
-            ClassName recordClassName
-    ) {
-        // No argument factory method
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(mutatorClassName)
-                .addStatement("return new $T(null)", mutatorClassName)
-                .build());
-
-        // Factory method
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("mutator")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(recordClassName, "value")
-                .returns(mutatorClassName)
-                .addStatement("return new $T(value)", mutatorClassName)
-                .build());
-
-        String firstComponentName = getFirstComponentName(recordElement);
-        if (firstComponentName != null) {
-            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("constructor")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .returns(mutatorClassName.nestedClass(toConstructorInterfaceName(firstComponentName)))
-                    .addStatement("return new $T(null).crateConstructor()", mutatorClassName)
-                    .build());
-        } else {
-            mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("constructor")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .returns(mutatorClassName.nestedClass("ConstructorDone"))
-                    .addStatement("return new $T(null).crateConstructor()", mutatorClassName)
-                    .build());
-        }
-
-        mutatorClassBuilder.addMethod(MethodSpec.methodBuilder("crateConstructor")
-                .addModifiers(Modifier.PRIVATE)
-                .returns(mutatorClassName.nestedClass("Constructor"))
-                .addStatement("return new Constructor()")
-                .build());
-
-    }
-
-    private static void addConstructor(
-            TypeSpec.Builder mutatorClassBuilder,
-            TypeElement recordElement,
-            ClassName recordClassName
-    ) {
-        CodeBlock.Builder constructorCodeBuilder = CodeBlock.builder();
-        constructorCodeBuilder.beginControlFlow("if (value != null)");
-        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
-            String componentName = recordComponentElement.getSimpleName().toString();
-            String fieldName = toFiledName(componentName);
-
-            constructorCodeBuilder.addStatement("this.$N = value.$N()", fieldName, componentName);
-        }
-        constructorCodeBuilder.endControlFlow();
-
-        mutatorClassBuilder.addMethod(MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PRIVATE)
-                .addParameter(recordClassName, "value")
-                .addCode(constructorCodeBuilder.build())
-                .build());
-    }
-
-    private static List<String> creteFieldNameList(TypeElement recordElement) {
-        List<String> fieldList = new ArrayList<>();
-        for (RecordComponentElement recordComponentElement : recordElement.getRecordComponents()) {
-            String componentName = recordComponentElement.getSimpleName().toString();
-            String fieldName = toFiledName(componentName);
-            fieldList.add("this." + fieldName);
-        }
-        return fieldList;
-    }
-
-    private static String toFiledName(String componentName) {
-        return componentName.substring(0, 1).toLowerCase(Locale.ROOT) + componentName.substring(1);
-    }
-
-    void printMessage(Diagnostic.Kind kind, String message) {
-        processingEnv.getMessager().printMessage(kind, message);
-    }
-
+    /**
+     * Prints a message to the messager.
+     *
+     * @param kind    the message kind
+     * @param message the message text
+     * @param element the element to link the message to
+     */
     void printMessage(Diagnostic.Kind kind, String message, Element element) {
         processingEnv.getMessager().printMessage(kind, message, element);
     }

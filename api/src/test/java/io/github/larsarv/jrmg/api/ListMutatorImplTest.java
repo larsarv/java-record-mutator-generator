@@ -1,63 +1,20 @@
 package io.github.larsarv.jrmg.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.*;
-
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 class ListMutatorImplTest {
-
-    record TestRecord(boolean test) {
-        public TestRecord() {
-            this(false);
-        }
-    }
-    static class TestRecordMutator implements Builder<TestRecord> {
-        boolean test;
-        
-        public TestRecordMutator(TestRecord testRecord) {
-            if (testRecord != null) {
-                this.test = testRecord.test;
-            }
-        }
-
-        @Override
-        public TestRecord build() {
-            return new TestRecord(test);
-        }
-
-        public TestRecordMutator setTest(boolean value) {
-            test = value;
-            return this;
-        }
-    }
-    record StringRecord(String value) {}
-    static class StringRecordMutator implements Builder<StringRecord> {
-        String value;
-
-        public StringRecordMutator(StringRecord stringRecord) {
-            if (stringRecord != null) {
-                this.value = stringRecord.value;
-            }
-        }
-
-        @Override
-        public StringRecord build() {
-            return new StringRecord(value);
-        }
-
-        public StringRecordMutator setValue(String value) {
-            this.value = value;
-            return this;
-        }
-    }
 
     @Test
     void shouldReturnCorrectElementWhenGettingFromList() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         TestRecord result = mutator.get(1);
@@ -70,7 +27,7 @@ class ListMutatorImplTest {
     void shouldSetElementAtSpecifiedIndex() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
         TestRecord value = new TestRecord();
 
         // Act
@@ -84,7 +41,7 @@ class ListMutatorImplTest {
     void shouldAddElementToTheEndOfList() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
         TestRecord value = new TestRecord();
 
         // Act
@@ -100,7 +57,7 @@ class ListMutatorImplTest {
     void shouldRemoveElementAtSpecifiedIndex() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.remove(1);
@@ -116,7 +73,7 @@ class ListMutatorImplTest {
         // Arrange
         TestRecord value = new TestRecord();
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), value, new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.filter(t -> t == value);
@@ -134,7 +91,7 @@ class ListMutatorImplTest {
         TestRecord value1 = new TestRecord();
         TestRecord value2 = new TestRecord();
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), value2);
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.updateAll((index, item) -> {
@@ -157,7 +114,7 @@ class ListMutatorImplTest {
     void shouldReturnImmutableListCopyOnBuild() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         List<TestRecord> builtList = mutator.build();
@@ -171,7 +128,7 @@ class ListMutatorImplTest {
     void shouldThrowExceptionOnModificationAfterBuild() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         List<TestRecord> builtList = mutator.build();
@@ -185,7 +142,7 @@ class ListMutatorImplTest {
     void shouldReturnImmutableListCopyOnBuildCopy() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         List<TestRecord> builtList = mutator.buildCopy();
@@ -199,7 +156,7 @@ class ListMutatorImplTest {
     void shouldNotThrowExceptionOnModificationAfterBuildCopy() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         List<TestRecord> builtList = mutator.buildCopy();
@@ -211,7 +168,7 @@ class ListMutatorImplTest {
     @Test
     void shouldHandleNullListInConstructor() {
         // Arrange
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(null, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(null, TestRecordMutator::new);
 
         // Act
         List<TestRecord> builtList = mutator.build();
@@ -224,7 +181,7 @@ class ListMutatorImplTest {
     void shouldThrowIndexOutOfBoundsExceptionWhenSettingOutOfBoundsIndex() {
         // Arrange
         List<TestRecord> originalList = List.of(new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act & Assert
         assertThrows(IndexOutOfBoundsException.class, () -> mutator.set(1, new TestRecord()));
@@ -234,7 +191,7 @@ class ListMutatorImplTest {
     void shouldThrowIndexOutOfBoundsExceptionWhenRemovingOutOfBoundsIndex() {
         // Arrange
         List<TestRecord> originalList = List.of(new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act & Assert
         assertThrows(IndexOutOfBoundsException.class, () -> mutator.remove(1));
@@ -244,7 +201,7 @@ class ListMutatorImplTest {
     void shouldAllowAddingNullElementToTheList() {
         // Arrange
         List<TestRecord> originalList = List.of(new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.add((TestRecord) null);
@@ -259,7 +216,7 @@ class ListMutatorImplTest {
     void shouldAddRecordMutatorToTheList() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.add(m -> m.setTest(true));
@@ -274,7 +231,7 @@ class ListMutatorImplTest {
     void shouldSetRecordMutatorAtSpecifiedIndex() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.set(1, new TestRecordMutator(new TestRecord(true)));
@@ -288,7 +245,7 @@ class ListMutatorImplTest {
     void shouldMutateElementAtSpecifiedIndex() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act
         mutator.mutate(1, m -> m.setTest(true));
@@ -306,7 +263,7 @@ class ListMutatorImplTest {
                 new StringRecord("apple"),
                 new StringRecord("cherry"));
 
-        var mutator = new ListMutatorImpl<>(originalList, StringRecordMutator::new);
+        var mutator = new ListBuildImpl<>(originalList, StringRecordMutator::new);
 
         // Act
         mutator.sort(Comparator.comparing(r -> r.value));
@@ -329,7 +286,7 @@ class ListMutatorImplTest {
                 new StringRecord("apple"),
                 new StringRecord("cherry"));
 
-        var mutator = new ListMutatorImpl<>(originalList, StringRecordMutator::new);
+        var mutator = new ListBuildImpl<>(originalList, StringRecordMutator::new);
 
         // Act
         mutator.move(0, 1);
@@ -348,7 +305,7 @@ class ListMutatorImplTest {
     void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex0ToIndex3() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act & Assert
         assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(0, 3));
@@ -358,9 +315,58 @@ class ListMutatorImplTest {
     void shouldThrowIndexOutOfBoundsExceptionWhenMovingFromIndex2ToIndexMinus1() {
         // Arrange
         List<TestRecord> originalList = Arrays.asList(new TestRecord(), new TestRecord(), new TestRecord());
-        ListMutatorImpl<TestRecord, TestRecordMutator, TestRecordMutator> mutator = new ListMutatorImpl<>(originalList, TestRecordMutator::new);
+        ListBuildImpl<TestRecord, TestRecordMutator> mutator = new ListBuildImpl<>(originalList, TestRecordMutator::new);
 
         // Act & Assert
         assertThrows(IndexOutOfBoundsException.class, () -> mutator.move(3, -1));
+    }
+
+    record TestRecord(boolean test) {
+        public TestRecord() {
+            this(false);
+        }
+    }
+
+    static class TestRecordMutator implements Builder<TestRecord> {
+        boolean test;
+
+        public TestRecordMutator(TestRecord testRecord) {
+            if (testRecord != null) {
+                this.test = testRecord.test;
+            }
+        }
+
+        @Override
+        public TestRecord build() {
+            return new TestRecord(test);
+        }
+
+        public TestRecordMutator setTest(boolean value) {
+            test = value;
+            return this;
+        }
+    }
+
+    record StringRecord(String value) {
+    }
+
+    static class StringRecordMutator implements Builder<StringRecord> {
+        String value;
+
+        public StringRecordMutator(StringRecord stringRecord) {
+            if (stringRecord != null) {
+                this.value = stringRecord.value;
+            }
+        }
+
+        @Override
+        public StringRecord build() {
+            return new StringRecord(value);
+        }
+
+        public StringRecordMutator setValue(String value) {
+            this.value = value;
+            return this;
+        }
     }
 }

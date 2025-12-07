@@ -1,43 +1,54 @@
 # The Java Record Mutator Generator  (JRMG)
+
 ## Overview
-The Java Record Mutator Generator (JRMG) is a compile-time annotation processor that automatically generates fluent 
-mutator/builder classes for Java records. It enables developers to create chainable operations to 
-modify nested record fields without resorting to complex workarounds or manual builder patterns.
 
-Records in Java are immutable by default, which makes modifying them cumbersome — especially when dealing with nested 
-structures or complex business logic. JRMG solves this problem by generating a mutator class for each annotated record, 
-allowing developers to modify nested records in a fluent, builder-like manner.
+The Java Record Mutator Generator (JRMG) is a compile-time annotation processor that automatically generates fluent
+mutator and constructor classes for Java records. It enables developers to create chainable operations to
+modify nested record fields and create new records without resorting to complex workarounds or manual builder patterns.
 
-See [`OVERVIE.md`](OVERVIEW.md) for an overview of the project structure.
+Records in Java are immutable by default, which makes modifying them cumbersome — especially when dealing with nested
+structures or complex business logic. JRMG solves this problem by generating mutator and constructor classes for each
+annotated record,
+allowing developers to modify nested records in a fluent, builder-like manner or create new records with compile-time
+guarantees.
+
+See [`OVERVIEW.md`](OVERVIEW.md) for an overview of the project structure.
 
 ## Key Features
-- Fluent API: Generated mutators provide a chainable, readable API for modifying record components.
-- Immutable Output: All mutations result in a new immutable record instance.
-- Nested Record Support: Enabling deep mutation.
-- Can act as builders. Can guarantee at compile time that all setters for the record components are called 
-  in order of declaration. 
-- List, Set, and Map Support: Lists, Sets, and Maps can be mutated using specialized mutator interfaces, 
+
+- Fluent API: Generated mutators and constructors provide a chainable, readable API for modifying or creating record
+  components.
+- Immutable Output: All mutations and constructions result in a new immutable record instance.
+- Nested Record Support: Enabling deep mutation and construction.
+- Can act as builders. Can guarantee at compile time that all setters for the record components are called
+  in order of declaration with constructors.
+- List, Set, and Map Support: Lists, Sets, and Maps can be mutated using specialized mutator interfaces,
   allowing you to mutate individual items or apply transformations to all items.
-- Compile-Time Generation: Uses annotation processing to generate mutator classes at compile time.
+- Compile-Time Generation: Uses annotation processing to generate mutator and constructor classes at compile time.
 - Type Safety: Fully type-safe — all generated methods are strongly typed and checked at compile time.
 - Supports Java 17+
 
 ## Use Cases
+
 - Domain Modeling: Modify complex domain records without writing manual builders.
-- Testing: Create test data with specific mutations for unit tests.
+- Testing: Create test data with specific mutations or constructions for unit tests.
 - Data Transformation: Apply transformations to nested records.
 
 ## How It Works
-To use JRMG, simply annotate your record class with @GenerateMutator. The annotation processor will generate a mutator 
-class with methods to set, get, and mutate each field. The generated class implements RecordMutator<T>, which provides 
-a build() method to finalize the mutation and return a new immutable record.
+
+To use JRMG, simply annotate your record class with @GenerateMtor, @GenerateCtor, or @GenerateCtorAndMtor. The
+annotation processor will generate mutator
+and/or constructor classes with methods to set, get, mutate, and construct each field. The generated classes implement
+Builder<T>, which provides
+a build() method to finalize the mutation or construction and return a new immutable record.
 Example:
+
 ```
-@GenerateMutator
+@GenerateCtorAndMtor
 public record Shipment(
         String shipmentNo,
         ShipmentStatus status,
-        Map<PartyType,Party> parties,
+        Map<PartyType, Party> parties,
         List<Parcel> parcels,
         ProformaInvoice proformaInvoice,
         List<String> specialInstructions,
@@ -46,12 +57,14 @@ public record Shipment(
 ) {
 }
 ```
-This generates `ShipmentMutator`.
+
+This generates `ShipmentMtor` and `ShipmentCtor`.
 
 Below is an example of using mutators to update nested values.
+
 ```
 public Shipment updateParcelStatus(Shipment shipment, String parcelNo, ParcelStatus parcelStatus) {
-    return ShipmentMutator.mutator(shipment)
+    return ShipmentMtor.mutator(shipment)
             .mutateParcels(parcels -> parcels
                     .findFirstAndMutate(parcel -> parcelNo.equals(parcel.parcelNo()), parcel -> parcel
                             .setStatus(parcelStatus)))
@@ -59,19 +72,22 @@ public Shipment updateParcelStatus(Shipment shipment, String parcelNo, ParcelSta
 }
 
 public Shipment updateShipmentWithNewParcel(Shipment originalShipment, Parcel parcel) {
-    return ShipmentMutator.mutator(originalShipment)
+    return ShipmentMtor.mutator(originalShipment)
             .mutateParcels(parcels -> parcels
-                    .add(ParcelMutator.mutator(parcel)
+                    .add(ParcelMtor.mutator(parcel)
                             .setStatus(ParcelStatus.CREATED)
                             .build()))
             .build();
 }
 ```
-Below is an example of using mutators as builder. Note the use off the `constructor()`/`constructXyz()` functions to give compile time error if not all 
+
+Below is an example of using constructors as builders. Note the use of the `constructor()`/`constructXyz()` functions to
+give compile time error if not all
 component of the record is set in the order of declaration.
+
 ```
 public Shipment createShipmentTestData() {
-    return ShipmentMutator.constructor()
+    return ShipmentCtor.constructor()
             .setShipmentNo("SHP001")
             .setStatus(ShipmentStatus.CREATED)
             .constructParties(parties -> parties
@@ -121,14 +137,15 @@ public Shipment createShipmentTestData() {
             .constructProformaInvoice(proformaInvoice -> proformaInvoice
                     .setInvoiceNo("INV001")
                     .setDescription("Sample Invoice")
-                    .setLineItemPrices(prices -> prices)
-                    .setLineItemDescriptions(lineItemDescriptions -> lineItemDescriptions)
-                    .setQuantities(quantities -> quantities)
-                    .setTaxCodes(taxCodes -> taxCodes)
+                    .constructLineItemPrices(prices -> prices)
+                    .constructLineItemDescriptions(lineItemDescriptions -> lineItemDescriptions)
+                    .constructQuantities(quantities -> quantities
+                            .put("test", 10))
+                    .constructTaxCodes(taxCodes -> taxCodes)
                     .setTotalAmount(new BigDecimal("100.00"))
                     .setIssueDate(LocalDateTime.now())
-                    .setCustomFields(customFields -> customFields))
-            .setSpecialInstructions(specialInstructions -> specialInstructions
+                    .constructCustomFields(customFields -> customFields))
+            .constructSpecialInstructions(specialInstructions -> specialInstructions
                     .add("Handle with care")
                     .add("Fragile"))
             .setCreatedDate(LocalDateTime.now())
@@ -138,6 +155,7 @@ public Shipment createShipmentTestData() {
 ```
 
 ## Maven Setup
+
 ```
 <properties>
     <jrmg.version>1.0.0</jrmg.version>
@@ -172,7 +190,9 @@ public Shipment createShipmentTestData() {
 ```
 
 ## Conclusion
-The Java Record Mutator Generator is a powerful tool for developers who want to leverage Java records while 
-maintaining the ability to modify them in a fluent, immutable, and type-safe way. By combining the simplicity of 
+
+The Java Record Mutator Generator is a powerful tool for developers who want to leverage Java records while
+maintaining the ability to modify or create them in a fluent, immutable, and type-safe way. By combining the simplicity
+of
 records with the power of fluent APIs, JRMG reduces boilerplate and improves code readability.
 If you’re using records and want to avoid manual builders, JRMG is your solution.
