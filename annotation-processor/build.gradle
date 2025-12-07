@@ -88,12 +88,6 @@ jreleaser {
             }
         }
     }
-    release {
-        github {
-            0
-            enabled = false
-        }
-    }
 }
 
 dependencies {
